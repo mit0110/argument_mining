@@ -1,0 +1,22 @@
+INFO:root:Accuracy with Tfidf: 0.33 (+/- 0.05)
+INFO:root:Grid search best score 0.424170483378
+INFO:root:Grid search best params:
+INFO:root:clf__alpha: 1
+INFO:root:tfidf__use_idf: True
+INFO:root:vect__max_features: 1000
+INFO:root:vect__ngram_range: (1, 2)
+INFO:root:Classification report
+INFO:root:             precision    recall  f1-score   support
+
+      Claim       0.68      0.25      0.36        61
+ MajorClaim       0.49      0.75      0.59        88
+       None       0.58      0.69      0.63       104
+    Premise       0.36      0.16      0.22        50
+
+avg / total       0.54      0.53      0.50       303
+
+INFO:root:Confusion matrix
+INFO:root:15	21	21	4
+INFO:root:4	66	14	4
+INFO:root:2	24	72	6
+INFO:root:1	23	18	8

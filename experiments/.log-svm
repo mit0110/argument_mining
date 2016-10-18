@@ -1,0 +1,36 @@
+INFO:root:Accuracy with Tfidf: 0.33 (+/- 0.03)
+INFO:root:Grid search best score 0.33355393779
+INFO:root:Grid search best params:
+INFO:root:clf__alpha: 0.1
+INFO:root:tfidf__use_idf: True
+INFO:root:vect__max_features: 1000
+INFO:root:vect__ngram_range: (1, 1)
+INFO:root:Accuracy with Tfidf: 0.33 (+/- 0.03)
+INFO:root:Grid search best score 0.339510258107
+INFO:root:Grid search best params:
+INFO:root:clf__alpha: 0.05
+INFO:root:tfidf__use_idf: True
+INFO:root:vect__max_features: 1000
+INFO:root:vect__ngram_range: (1, 2)
+INFO:root:Accuracy with Tfidf: 0.33 (+/- 0.03)
+INFO:root:Grid search best score 0.540562913907
+INFO:root:Grid search best params:
+INFO:root:clf__alpha: 0.001
+INFO:root:tfidf__use_idf: True
+INFO:root:vect__max_features: 10000
+INFO:root:vect__ngram_range: (1, 1)
+INFO:root:Classification report
+INFO:root:             precision    recall  f1-score   support
+
+      Claim       0.69      0.36      0.47        61
+ MajorClaim       0.58      0.72      0.64        88
+       None       0.64      0.73      0.68       104
+    Premise       0.43      0.38      0.40        50
+
+avg / total       0.60      0.59      0.58       303
+
+INFO:root:Confusion matrix
+INFO:root:22	20	12	7
+INFO:root:6	63	13	6
+INFO:root:2	14	76	12
+INFO:root:2	12	17	19

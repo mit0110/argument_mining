@@ -7,16 +7,25 @@ x_test.pickle The numeric matrix to use for training a classifier.
 y_test.pickle The true labels of each element in x_train.
 
 Usage:
-    process_arg_essays.py --input_dirpath=<dirpath>
+    process_arg_essays.py --input_dirpath=<dirpath> --output_filename=<filename> [--raw_text]
 
 Options:
-   --input_dirpath=<dirpath>    The path to directory where to store files.
+   --input_dirpath=<dirpath>        The path to directory to read files.
+   --output_filename=<filename>     The path to directory to store files.
+   --raw_text                       Save only sentences without process.
 """
 
-import docopt
+import logging
+logging.basicConfig(level=logging.INFO)
 import nltk
+import numpy
 import re
 import os
+
+import sys
+sys.path.insert(0, os.path.abspath('..'))
+
+import utils
 
 from collections import defaultdict
 from sklearn.feature_extraction import DictVectorizer
@@ -78,8 +87,8 @@ class LabeledSentencesExtractor(object):
                 :len(sentence) - component_start])
         return label
 
-    def get_instance(self):
-        """Returns next instance"""
+    def get_labeled_sentences(self):
+        """Returns all instances and corresponding labels in two lists."""
         self._get_labels()
         essay_text = self.instance_input_file.read()
         sentences = nltk.tokenize.sent_tokenize(essay_text)
@@ -90,43 +99,8 @@ class LabeledSentencesExtractor(object):
             labels.append(self._get_label(sentence, labels_indexes,
                                           current_start_index))
             current_start_index += len(sentence) + 1  # New line at the end.
-        return sentences, labels
-
-
-class DatasetHandler(object):
-    """Abstraction to read and write datasets as numeric matrixes to files."""
-    def __init__(self, dirpath, **kwargs):
-        self.dirpath = dirpath
-        if 'split_sizes' in kwargs:
-            self.split_sizes = kwargs['split_sizes']
-        else:
-            self.split_sizes = [0.8, 0.2]
-
-    @property
-    def x_train(self):
-        return self._x_train
-
-    @property
-    def y_train(self):
-        return self._y_train
-
-    @property
-    def x_test(self):
-        return self._x_test
-
-    @property
-    def y_test(self):
-        return self._y_test
-
-    def save():
-        pass
-
-    def read():
-        pass
-
-    def build_from_matrix(matrix, labels):
-        """Constructs a dataset from matrix and labels object."""
-        pass
+        assert len(sentences) == len(labels) + 1
+        return sentences[1:], labels
 
 
 class FeatureExtractor(object):
@@ -165,26 +139,33 @@ def get_input_files(input_dirpath, pattern):
             yield os.path.join(input_dirpath, filename)
 
 
-def read_arguments():
-    """Reads the arguments values from stdin."""
-    raw_arguments = docopt.docopt(__doc__)
-    arguments = {re.sub(r'[-,<,>,]', '', key): value
-                 for key, value in raw_arguments.iteritems()}
-    return arguments
-
-
 def main():
     """Main fuction of the script."""
-    args = read_arguments()
-
+    args = utils.read_arguments(__doc__)
+    sentences = []
+    labels = []
     for filename in get_input_files(args['input_dirpath'], r'.*txt'):
         with LabeledSentencesExtractor(filename) as instance_extractor:
-            sentences, labels = instance_extractor.get_labeled_sentences()
+            labeled_senteces = instance_extractor.get_labeled_sentences()
+            sentences.extend(labeled_senteces[0])
+            labels.extend(labeled_senteces[1])
 
-    # Process sentences as vectors
-    feature_extractor = FeatureExtractor()
-    x_matrix = feature_extractor.get_matrix(sentences)
-    # Vectors
+    if not args['raw_text']:
+        # Process sentences as vectors
+        feature_extractor = FeatureExtractor()
+        x_train = feature_extractor.get_matrix(sentences)
+        logging.info('Saving numeric matrix with shape {}'.format(
+            x_train.shape))
+    else:
+        x_train = sentences
+        logging.info('Saving raw text, {} sentences'.format(len(sentences)))
+
+    # Convert labels to numeric vector
+    unique_labels = sorted(numpy.unique(labels).tolist())
+    y_vector = [unique_labels.index(label) for label in labels]
+    logging.info('Classes used (sorted) {}'.format(unique_labels))
+
+    utils.pickle_to_file((x_train, y_vector), args['output_filename'])
 
 
 
