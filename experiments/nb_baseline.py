@@ -19,7 +19,6 @@ import utils
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.naive_bayes import MultinomialNB
-from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline
 
 
@@ -44,9 +43,7 @@ def main():
         'tfidf__use_idf': (True, False),
         'clf__alpha': (1, 2, 5, 10),
     }
-    grid_search = GridSearchCV(
-        classifier, parameters, n_jobs=-1, scoring='f1_macro')
-    evaluation.evaluate_grid_search(x_matrix, y_vector, grid_search, parameters)
+    evaluation.evaluate_grid_search(x_matrix, y_vector, classifier, parameters)
 
 
 if __name__ == '__main__':

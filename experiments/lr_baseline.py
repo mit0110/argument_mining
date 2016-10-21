@@ -14,14 +14,10 @@ import sys
 sys.path.insert(0, os.path.abspath('..'))
 
 import evaluation
+import process_pipeline
 import utils
 
-from sklearn.feature_extraction.text import TfidfTransformer
-from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import GridSearchCV
-from sklearn.pipeline import Pipeline
-
 
 def main():
     """Script main function"""
@@ -30,23 +26,18 @@ def main():
     # Read dataset
     x_matrix, y_vector = utils.pickle_from_file(args['input_filename'])
 
-    classifier = Pipeline([
-        ('vect', CountVectorizer(
-            ngram_range=(1, 3), max_features=10**4)),
-        ('tfidf', TfidfTransformer()),
-        ('clf', LogisticRegression(C=0.01, n_jobs=-1)),
-    ])
+    classifier = process_pipeline.get_basic_pipeline(
+        ('clf', LogisticRegression(C=1, n_jobs=-1)))
+    # classifier.set_params(**{  # Optimized for LR
+    #     'features__vect__max_features': 1000,
+    #     'features__vect__ngram_range': (1, 1)
+    # })
     evaluation.evaluate(x_matrix, y_vector, classifier)
 
-    parameters = {
-        'vect__ngram_range': [(1, 1), (1, 2), (1, 3)],
-        'vect__max_features': [10**3, 10**4, 10**5],
-        'tfidf__use_idf': (True, False),
-        'clf__C': (1, 0.5, 0.3, 0.1, 0.05, 1e-2, 1e-3),
-    }
-    grid_search = GridSearchCV(
-        classifier, parameters, n_jobs=-1, scoring='f1_macro')
-    evaluation.evaluate_grid_search(x_matrix, y_vector, grid_search, parameters)
+    parameters = process_pipeline.get_basic_parameters()
+    for parameter in parameters:
+        parameter['clf__C'] = (1, 0.5, 0.3, 0.1, 0.05, 1e-2, 1e-3)
+    # evaluation.evaluate_grid_search(x_matrix, y_vector, classifier, parameters)
 
 
 if __name__ == '__main__':
