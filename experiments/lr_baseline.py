@@ -1,10 +1,11 @@
 """Baseline with support vector machine.
 
 Usage:
-    lr_baseline.py --input_filename=<filename>
+    lr_baseline.py --input_filename=<filename> [--use_trees]
 
 Options:
    --input_filename=<filename>      The path to directory to read the dataset.
+   --use_trees                      The input is a pickled parse tree.
 """
 
 import logging
@@ -26,18 +27,23 @@ def main():
     # Read dataset
     x_matrix, y_vector = utils.pickle_from_file(args['input_filename'])
 
-    classifier = process_pipeline.get_basic_pipeline(
-        ('clf', LogisticRegression(C=1, n_jobs=-1)))
-    # classifier.set_params(**{  # Optimized for LR
-    #     'features__vect__max_features': 1000,
-    #     'features__vect__ngram_range': (1, 1)
-    # })
-    evaluation.evaluate(x_matrix, y_vector, classifier)
+    if args['use_trees']:
+        classifier = process_pipeline.get_basic_tree_pipeline(
+            ('clf', LogisticRegression(C=1, n_jobs=-1)))
+        parameters = process_pipeline.get_tree_parameter_grid()
+        parameters['clf__C'] = (1, 0.5, 0.3, 0.1, 0.05)
+    else:
+        classifier = process_pipeline.get_basic_pipeline(
+            ('clf', LogisticRegression(C=1, n_jobs=-1)))
+        classifier.set_params(**{  # Optimized for LR
+            'features__vect__max_features': 1000,
+            'features__vect__ngram_range': (1, 1)
+        })
+        parameters = process_pipeline.get_basic_parameters()
+        for parameter in parameters:
+            parameter['clf__C'] = (1, 0.5, 0.3, 0.1, 0.05, 1e-2, 1e-3)
 
-    parameters = process_pipeline.get_basic_parameters()
-    for parameter in parameters:
-        parameter['clf__C'] = (1, 0.5, 0.3, 0.1, 0.05, 1e-2, 1e-3)
-    # evaluation.evaluate_grid_search(x_matrix, y_vector, classifier, parameters)
+    evaluation.evaluate_grid_search(x_matrix, y_vector, classifier, parameters)
 
 
 if __name__ == '__main__':
