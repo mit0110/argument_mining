@@ -161,5 +161,5 @@ def get_tree_parameter_grid():
         ],
         'features__ngrams__word_counter__max_features': [10**3, 10**4, 10**5],
         'features__ngrams__word_counter__ngram_range': [(1, 1), (1, 2), (1, 3)],
-        'features__ngrams__word_counter__tfidf__use_idf': (True, False)
+        'features__ngrams__tfidf__use_idf': (True, False)
     }
