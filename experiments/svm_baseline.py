@@ -1,10 +1,12 @@
 """Baseline with support vector machine.
 
 Usage:
-    svm_baseline.py --input_filename=<filename>
+    svm_baseline.py --input_filename=<filename> [--use_trees] [--search_grid]
 
 Options:
    --input_filename=<filename>      The path to directory to read the dataset.
+   --use_trees                      The input is a pickled parse tree.
+   --search_grid                    Make extensive parameter search
 """
 
 import logging
@@ -27,16 +29,29 @@ def main():
     # Read dataset
     x_matrix, y_vector = utils.pickle_from_file(args['input_filename'])
 
-    classifier = process_pipeline.get_basic_pipeline(
-        ('clf', SGDClassifier(loss='hinge', penalty='l2', alpha=1e-2,
-                              n_iter=5, random_state=42))
-    )
-    # evaluation.evaluate(x_matrix, y_vector, classifier)
+    if args['use_trees']:
+        classifier = process_pipeline.get_basic_tree_pipeline(
+            ('clf', SGDClassifier(loss='hinge', penalty='l2', alpha=1e-2,
+                                  n_iter=5, random_state=42)))
+        parameters = process_pipeline.get_tree_parameter_grid()
+        parameters['clf__alpha'] = (0.3, 0.1, 0.05, 1e-2, 1e-3)
+    else:
+        classifier = process_pipeline.get_basic_pipeline(
+            ('clf', SGDClassifier(loss='hinge', penalty='l2', alpha=1e-2,
+                                  n_iter=5, random_state=42))
+        )
 
-    parameters = process_pipeline.get_basic_parameters()
-    for parameter in parameters:
-        parameter['clf__alpha'] = (0.3, 0.1, 0.05, 1e-2, 1e-3)
-    evaluation.evaluate_grid_search(x_matrix, y_vector, classifier, parameters)
+        parameters = process_pipeline.get_basic_parameters()
+        for parameter in parameters:
+            parameter['clf__alpha'] = (0.3, 0.1, 0.05, 1e-2, 1e-3)
+
+
+    if args['search_grid']:
+        evaluation.evaluate_grid_search(x_matrix, y_vector,
+                                        classifier, parameters)
+    else:
+        evaluation.deep_evaluate(x_matrix, y_vector, classifier)
+
 
 if __name__ == '__main__':
     main()

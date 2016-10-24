@@ -1,11 +1,12 @@
 """Baseline with support vector machine.
 
 Usage:
-    lr_baseline.py --input_filename=<filename> [--use_trees]
+    lr_baseline.py --input_filename=<filename> [--use_trees] [--search_grid]
 
 Options:
    --input_filename=<filename>      The path to directory to read the dataset.
    --use_trees                      The input is a pickled parse tree.
+   --search_grid                    Make extensive parameter search
 """
 
 import logging
@@ -20,6 +21,7 @@ import utils
 
 from sklearn.linear_model import LogisticRegression
 
+
 def main():
     """Script main function"""
     args = utils.read_arguments(__doc__)
@@ -30,6 +32,10 @@ def main():
     if args['use_trees']:
         classifier = process_pipeline.get_basic_tree_pipeline(
             ('clf', LogisticRegression(C=1, n_jobs=-1)))
+        classifier.set_params(**{  # Optimized for LR
+            'features__ngrams__word_counter__max_features': 1000,
+            'features__ngrams__word_counter__ngram_range': (1, 1)
+        })
         parameters = process_pipeline.get_tree_parameter_grid()
         parameters['clf__C'] = (1, 0.5, 0.3, 0.1, 0.05)
     else:
@@ -43,7 +49,11 @@ def main():
         for parameter in parameters:
             parameter['clf__C'] = (1, 0.5, 0.3, 0.1, 0.05, 1e-2, 1e-3)
 
-    evaluation.evaluate_grid_search(x_matrix, y_vector, classifier, parameters)
+    if args['search_grid']:
+        evaluation.evaluate_grid_search(x_matrix, y_vector,
+                                        classifier, parameters)
+    else:
+        evaluation.deep_evaluate(x_matrix, y_vector, classifier)
 
 
 if __name__ == '__main__':
