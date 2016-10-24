@@ -31,8 +31,8 @@ def main():
 
     if args['use_trees']:
         classifier = process_pipeline.get_basic_tree_pipeline(
-            ('clf', SGDClassifier(loss='hinge', penalty='l2', alpha=1e-3,
-                                  n_iter=5, random_state=42)))
+            ('clf', SGDClassifier(loss='hinge', penalty='l2', alpha=1e-2,
+                                  n_iter=5, random_state=42, n_jobs=-1)))
         parameters = process_pipeline.get_tree_parameter_grid()
         features = process_pipeline.get_tree_steps()
         classifier.set_params(**{  # Optimized for SVM
@@ -49,7 +49,7 @@ def main():
     else:
         classifier = process_pipeline.get_basic_pipeline(
             ('clf', SGDClassifier(loss='hinge', penalty='l2', alpha=1e-2,
-                                  n_iter=5, random_state=42))
+                                  n_iter=5, random_state=42, n_jobs=-1))
         )
 
         parameters = process_pipeline.get_basic_parameters()
