@@ -4,6 +4,7 @@
 >>> import nltk
 >>> nltk.download('punkt')
 >>> nltk.download('averaged_perceptron_tagger')
+>>> nltk.download('wordnet')
 ```
 
 #### Using the Stanford Parser (with nltk 3.2.1)
