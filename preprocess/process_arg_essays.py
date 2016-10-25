@@ -53,10 +53,11 @@ class LabeledSentencesExtractor(object):
         self.instance_input_file.close()
 
     def _get_labels(self):
-        """Read labels from file.
+        """Read labels from the annotation file.
 
         Each label is a map
             start_index -> (label type, component text).
+        Saves the resulting labels in self.raw_labels
         """
         self.raw_labels = {}
         for line in self.label_input_file.readlines():
