@@ -37,7 +37,7 @@ def main():
             'features__ngrams__word_counter__ngram_range': (1, 1)
         })
         parameters = process_pipeline.get_tree_parameter_grid()
-        parameters['clf__C'] = (1, 0.5, 0.3, 0.1, 0.05)
+        parameters['clf__C'] = (1, 0.3, 0.1)
     else:
         classifier = process_pipeline.get_basic_pipeline(
             ('clf', LogisticRegression(C=1, n_jobs=-1)))
@@ -47,13 +47,14 @@ def main():
         })
         parameters = process_pipeline.get_basic_parameters()
         for parameter in parameters:
-            parameter['clf__C'] = (1, 0.5, 0.3, 0.1, 0.05, 1e-2, 1e-3)
+            parameter['clf__C'] = (1, 0.3, 0.1)
 
     if args['search_grid']:
         evaluation.evaluate_grid_search(x_matrix, y_vector,
                                         classifier, parameters)
     else:
         evaluation.deep_evaluate(x_matrix, y_vector, classifier)
+        evaluation.evaluate(x_matrix, y_vector, classifier)
 
 
 if __name__ == '__main__':

@@ -40,12 +40,14 @@ def main():
             'features__ngrams__word_counter__ngram_range': (1, 1),
             'features__transformer_list': [
                 ('ngrams', features['ngrams']),
-                ('pos_tags', features['pos_tags'])
+                ('pos_tags', features['pos_tags']),
+                ('structural_features', features['structural_features']),
+                ('verb_tense', features['verb_tense'])
             ],
         })
-        
+
         # Grid parameters
-        parameters['clf__alpha'] = (0.3, 0.1, 0.05, 1e-2, 1e-3)
+        parameters['clf__alpha'] = (0.1, 0.05, 1e-2, 1e-3)
     else:
         classifier = process_pipeline.get_basic_pipeline(
             ('clf', SGDClassifier(loss='hinge', penalty='l2', alpha=1e-2,
@@ -54,7 +56,7 @@ def main():
 
         parameters = process_pipeline.get_basic_parameters()
         for parameter in parameters:
-            parameter['clf__alpha'] = (0.3, 0.1, 0.05, 1e-2, 1e-3)
+            parameter['clf__alpha'] = (0.1, 0.05, 1e-2, 1e-3)
 
 
     if args['search_grid']:
@@ -62,6 +64,7 @@ def main():
                                         classifier, parameters)
     else:
         evaluation.deep_evaluate(x_matrix, y_vector, classifier)
+        evaluation.evaluate(x_matrix, y_vector, classifier)
 
 
 if __name__ == '__main__':

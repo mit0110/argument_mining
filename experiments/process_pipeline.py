@@ -3,6 +3,7 @@
 import itertools
 import nltk
 import numpy
+import string
 
 from scipy.sparse import csr_matrix
 from sklearn.feature_extraction.text import TfidfTransformer
@@ -93,7 +94,7 @@ def get_pos_from_tree(matrix):
         result = ''
         has_modal = False
         for word, tag in sentence_tree.pos():
-            if tag.startswith('V') or tag == 'RB':
+            if tag.startswith('V') or tag.startswith('RB'):
                 result += '{}-{} '.format(word, tag[0])
             elif tag == 'MD':
                 has_modal = True
@@ -116,6 +117,43 @@ def get_tree_metrics(matrix):
     return numpy.array(result)
 
 
+def get_verb_tense(matrix):
+    """Returns true if there is a verb in past tense, false otherwise."""
+    result = []
+    for sentence_tree in matrix:
+        row = False
+        for _, tag in sentence_tree[0].pos():
+            if tag in ['VBN', 'VBD']:
+                row = True
+                break
+        result.append(row)
+    return numpy.array(result, ndmin=2).T
+
+
+def get_structural_features(matrix):
+    """Returns a matrix with the structural features of the tree."""
+    # Each row is going to be
+    # (#tokens, #punct. marks, #pm prev, #pm next, question mark)
+    result = []
+    previous_pm = 0
+    punct_marks = set(string.punctuation)
+    for sentence_tree in matrix:
+        words = sentence_tree[0].leaves()
+        if not words:
+            row = [0] * 5
+        else:
+            punct_marks_count = len(punct_marks.intersection(words))
+            row = [
+                len(words), punct_marks_count,
+                previous_pm, 0, int(words[-1] == '?')
+            ]
+            if result:  # Add the number of pm for previous sentence
+                result[-1][3] = punct_marks_count
+        result.append(row)
+        previous_pm = row[2]
+    return numpy.array(result)
+
+
 def get_tree_steps():
     """Returns the feature extractors for a nltk.tree.Tree input."""
     return {
@@ -132,7 +170,10 @@ def get_tree_steps():
             ('pos_counter', CountVectorizer(
                 ngram_range=(1, 1), max_features=1000))
         ]),
-        'tree_metrics': FunctionTransformer(get_tree_metrics, validate=False)
+        'tree_metrics': FunctionTransformer(get_tree_metrics, validate=False),
+        'verb_tense': FunctionTransformer(get_verb_tense, validate=False),
+        'structural_features': FunctionTransformer(get_structural_features,
+                                                   validate=False),
     }
 
 
@@ -158,8 +199,14 @@ def get_tree_parameter_grid():
              ('pos_tags', features['pos_tags'])],
             [('ngrams', features['ngrams']),
              ('tree_metrics', features['tree_metrics'])],
+            [('ngrams', features['ngrams']),
+             ('structural_features', features['structural_features']),
+             ('verb_tense', features['verb_tense'])],
+            [('ngrams', features['ngrams']),
+             ('pos_tags', features['pos_tags']),
+             ('verb_tense', features['verb_tense'])],
         ],
-        'features__ngrams__word_counter__max_features': [10**3, 10**4, 10**5],
+        'features__ngrams__word_counter__max_features': [10**3, 10**4],
         'features__ngrams__word_counter__ngram_range': [(1, 1), (1, 2), (1, 3)],
         'features__ngrams__tfidf__use_idf': (True, False)
     }

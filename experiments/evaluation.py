@@ -63,6 +63,5 @@ def evaluate_grid_search(x_matrix, y_vector, classifier, parameters):
     for param_name in sorted(parameters.keys()):
         logging.info('%s: %r' % (param_name,
                                  grid_search.best_params_[param_name]))
-    logging.info(str(grid_search.cv_results_))
     predictions = grid_search.predict(x_test)
     log_report(predictions, y_test)
