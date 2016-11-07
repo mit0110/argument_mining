@@ -8,9 +8,12 @@ from nltk.tokenize import sent_tokenize, word_tokenize
 
 class Sentence(object):
     """Abstraction of a sentence."""
-    def __init__(self, sentence_position, default_label='O'):
+    def __init__(self, position_in_document=-1, default_label='O',
+                 paragraph_number=-1, position_in_paragraph=-1):
         # Position of the sentence in the document
-        self.position = sentence_position
+        self.position_in_document = position_in_document
+        self.paragraph_number = paragraph_number
+        self.position_in_paragraph = position_in_paragraph
         self.words = []
         # Saves the start position in the original document for each word.
         self.word_positions = []
@@ -71,6 +74,14 @@ class Sentence(object):
             start += len(self.words[word_index])
         return start
 
+    def iter_words(self):
+        """Iterates over tuples of words (position in sentence, word, pos)"""
+        for index, (token, tag) in enumerate(zip(self.words, self.pos)):
+            yield index, token, tag
+
+    def __len__(self):
+        return len(self.words)
+
 
 class EssayDocument(object):
     def __init__(self, identifier, default_label='O', title=''):
@@ -84,14 +95,20 @@ class EssayDocument(object):
         self.parse_trees = []
 
     def build_from_text(self, text, start_index=0):
-        self.text = text
-        raw_sentences = sent_tokenize(six.text_type(text))
-        for index, raw_sentence in enumerate(raw_sentences):
-            sentence = Sentence(index)
-            initial_position = text.find(raw_sentence) + start_index
-            assert initial_position >= 0
-            sentence.build_from_text(raw_sentence, initial_position)
-            self.sentences.append(sentence)
+        self.text = text.decode('utf8')
+        paragraphs = self.text.split('\n')
+        position_in_document = 0
+        for paragraph_index, paragraph in enumerate(paragraphs):
+            raw_sentences = sent_tokenize(paragraph)
+            for index, raw_sentence in enumerate(raw_sentences):
+                sentence = Sentence(position_in_document=position_in_document,
+                                    paragraph_number=paragraph_index,
+                                    position_in_paragraph=index)
+                initial_position = self.text.find(raw_sentence) + start_index
+                assert initial_position >= 0
+                sentence.build_from_text(raw_sentence, initial_position)
+                self.sentences.append(sentence)
+                position_in_document += 1
 
     def add_label_for_position(self, label, start, end):
         """Adds the given label to all words covering range."""
