@@ -1,4 +1,4 @@
-"""Script to create parse trees and save them in pickle format.
+"""Script to create parse trees from processed dataset and pickle them.
 
 Usage:
     lr_baseline.py --input_filename=<file> --output_filename=<file>
@@ -33,13 +33,21 @@ def main():
         encoding='utf8')
     # Get parse trees.
     parsed_matrix = []
-    for index, sentence in tqdm(enumerate(x_matrix), total=len(x_matrix)):
-        try:
-            parsed_matrix.append(list(parser.raw_parse(six.text_type(
-                sentence.decode('utf-8')))))
-        except UnicodeDecodeError:
-            logging.warning('Skip sentence {} for unicode error'.format(index))
-            y_vector.pop(index)
+    for index, document in tqdm(enumerate(x_matrix), total=len(x_matrix)):
+        parsed_document = []
+        for paragraph_index, paragraph in enumerate(document):
+            parsed_paragraph = []
+            for sentence_index, sentence in enumerate(paragraph):
+                try:
+                    parsed_paragraph.append(list(parser.raw_parse(six.text_type(
+                        sentence.decode('utf-8')))))
+                except UnicodeDecodeError:
+                    logging.warning(
+                        'Skip sentence {}-{}-{} for unicode error'.format(
+                            index, paragraph_index, sentence_index))
+                    y_vector[index].pop(sentence_index)
+            parsed_document.append(parsed_paragraph)
+        parsed_matrix.append(parsed_document)
 
     # Save output
     utils.pickle_to_file((parsed_matrix, y_vector), args['output_filename'])

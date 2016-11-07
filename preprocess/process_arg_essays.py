@@ -1,10 +1,9 @@
 """Script to preprocess the Argumentative Essays dataset.
 
-The output is a numeric matrix stored in 4 files:
-x_train.pickle The numeric matrix to use for training a classifier.
-y_train.pickle The true labels of each element in x_train.
-x_test.pickle The numeric matrix to use for training a classifier.
-y_test.pickle The true labels of each element in x_train.
+The output is a pickled tuple.
+If --raw_text is true, the first element is a 2D numeric matrix, where
+instances are separated by document and by sentence. The second is a 2D matrix
+with the labels for each sentence.
 
 Usage:
     process_arg_essays.py --input_dirpath=<dirpath> --output_filename=<filename> [--raw_text]
@@ -67,41 +66,64 @@ class LabeledSentencesExtractor(object):
             label, start_index, _ = label_info.split()
             self.raw_labels[int(start_index)] = (label, text.strip())
 
-    def _get_label(self, sentence, labels_indexes, current_start_index):
+    def label_start_position(self, start, end):
+        """Returns the position of a label between start and end, or -1."""
+        start_index = -1
+        labels_indexes = sorted(self.raw_labels.keys())
+        for index in labels_indexes:
+            if index >= start and index < end:
+                start_index = index
+                break
+            if index > end:
+                break
+        return start_index
+
+    def _get_label(self, sentence, current_start_index):
         """Returns the label for sentence"""
         # Sentence has a label
-        if not (labels_indexes[0] >= current_start_index and
-                labels_indexes[0] < current_start_index + len(sentence)):
+        start_index = self.label_start_position(
+            current_start_index, current_start_index + len(sentence))
+        if start_index < 0:
             return 'None'
-        start_index = labels_indexes.pop(0)
         component_start = start_index - current_start_index
         label, component_text = self.raw_labels[start_index]
-        if len(component_text) <= len(sentence[:component_start]):
-            assert sentence.find(component_text) > 0
+        if len(component_text) <= len(sentence[component_start:]):
+            assert sentence.find(component_text) >= 0
         else:  # The component text extends to next sentence
             # Next label starts with the next sentence
             next_start = current_start_index + len(sentence) + 1
-            labels_indexes.insert(0, next_start)
             # Add again the label for next sentence, and only
             # the relevant part of the component_text
-            self.raw_labels[next_start] = (label, component_text[
-                :len(sentence) - component_start])
+            self.raw_labels[next_start] = (
+                label, component_text[len(sentence) - component_start + 1:])
         return label
 
     def get_labeled_sentences(self):
         """Returns all instances and corresponding labels in two lists."""
         self._get_labels()
         essay_text = self.instance_input_file.read()
-        sentences = nltk.tokenize.sent_tokenize(essay_text)
-        current_start_index = len(sentences[0]) + 2  # Two new lines
-        labels_indexes = sorted(self.raw_labels.keys())
+        paragraphs = essay_text.split('\n')
+        current_start_index = len(paragraphs[0]) + 1  # New lines
         labels = []
-        for sentence in sentences[1:]:  # Skip essay title
-            labels.append(self._get_label(sentence, labels_indexes,
-                                          current_start_index))
-            current_start_index += len(sentence) + 1  # New line at the end.
-        assert len(sentences) == len(labels) + 1
-        return sentences[1:], labels
+        splited_paragraphs = []
+        for paragraph in paragraphs[2:]:  # Skip essay title
+            current_start_index += 1  # New line at the end of last paragraph
+            if not len(paragraph):
+                continue
+            sentences = nltk.tokenize.sent_tokenize(paragraph)
+            sentence_labels = []
+            for sentence in sentences:
+                sentence_labels.append(self._get_label(sentence,
+                                                       current_start_index))
+                assert essay_text[current_start_index:current_start_index+len(sentence)] == sentence
+                current_start_index += len(sentence)
+                if (current_start_index < len(essay_text) and
+                        essay_text[current_start_index] == ' '):
+                    current_start_index += 1
+            assert len(sentences) == len(sentence_labels)
+            labels.append(sentence_labels)
+            splited_paragraphs.append(sentences)
+        return splited_paragraphs, labels
 
 
 class FeatureExtractor(object):
@@ -114,9 +136,11 @@ class FeatureExtractor(object):
 
     def get_matrix(self, sentences):
         """Extracts features from list of sentences."""
-        for sentence in sentences:
-            words = nltk.tokenize.word_tokenize(sentence)
-            self.ngrams.append(self.count_ngrams(words))
+        for document in sentences:
+            for paragraph in document:
+                for sentence in paragraph:
+                    words = nltk.tokenize.word_tokenize(sentence)
+                    self.ngrams.append(self.count_ngrams(words))
         matrix = self.vectorizer.fit_transform(self.ngrams)
         return matrix
 
@@ -148,8 +172,8 @@ def main():
     for filename in get_input_files(args['input_dirpath'], r'.*txt'):
         with LabeledSentencesExtractor(filename) as instance_extractor:
             labeled_senteces = instance_extractor.get_labeled_sentences()
-            sentences.extend(labeled_senteces[0])
-            labels.extend(labeled_senteces[1])
+            sentences.append(labeled_senteces[0])
+            labels.append(labeled_senteces[1])
 
     if not args['raw_text']:
         # Process sentences as vectors
@@ -159,12 +183,19 @@ def main():
             x_train.shape))
     else:
         x_train = sentences
-        logging.info('Saving raw text, {} sentences'.format(len(sentences)))
+        logging.info('Saving raw text, {} documents'.format(len(sentences)))
 
     # Convert labels to numeric vector
-    unique_labels = sorted(numpy.unique(labels).tolist())
-    y_vector = [unique_labels.index(label) for label in labels]
+    unique_labels = sorted(['Claim', 'MajorClaim', 'Premise', 'None'])
+    y_vector = []
+    counts = dict.fromkeys(unique_labels, 0)
+    for document_labels in labels:
+        for paragraph_labels in document_labels:
+            for label_index, label in enumerate(paragraph_labels):
+                paragraph_labels[label_index] = unique_labels.index(label)
+                counts[label] += 1
     logging.info('Classes used (sorted) {}'.format(unique_labels))
+    logging.info('\t Counts {}'.format(counts))
 
     utils.pickle_to_file((x_train, y_vector), args['output_filename'])
 
