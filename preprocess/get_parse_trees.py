@@ -1,7 +1,7 @@
 """Script to create parse trees from processed dataset and pickle them.
 
 Usage:
-    lr_baseline.py --input_filename=<file> --output_filename=<file>
+    get_parse_trees.py --input_filename=<file> --output_filename=<file>
 
 Options:
     --input_filename=<file>     The path to directory to read the dataset.
@@ -50,7 +50,9 @@ def main():
         parsed_matrix.append(parsed_document)
 
     # Save output
+    logging.info('Saving {} documents'.format(len(parsed_matrix)))
     utils.pickle_to_file((parsed_matrix, y_vector), args['output_filename'])
+    logging.info('All operations finished')
 
 
 if __name__ == '__main__':

@@ -187,8 +187,8 @@ def main():
 
     # Convert labels to numeric vector
     unique_labels = sorted(['Claim', 'MajorClaim', 'Premise', 'None'])
-    y_vector = []
     counts = dict.fromkeys(unique_labels, 0)
+    y_vector = []
     for document_labels in labels:
         for paragraph_labels in document_labels:
             for label_index, label in enumerate(paragraph_labels):
@@ -197,7 +197,7 @@ def main():
     logging.info('Classes used (sorted) {}'.format(unique_labels))
     logging.info('\t Counts {}'.format(counts))
 
-    utils.pickle_to_file((x_train, y_vector), args['output_filename'])
+    utils.pickle_to_file((x_train, labels), args['output_filename'])
 
 
 
