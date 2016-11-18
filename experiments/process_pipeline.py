@@ -12,73 +12,6 @@ from sklearn.pipeline import Pipeline, FeatureUnion
 from sklearn.preprocessing import FunctionTransformer
 
 
-def pos_filter(text):
-    """Returns a string with verbs and adverbs."""
-    def get_pos(sentence):
-        words = nltk.tokenize.word_tokenize(sentence[0])
-        return ''.join(['[[{}-{}]]'.format(word, tag)
-                        for word, tag in nltk.pos_tag(words)
-                        if tag.startswith('V') or tag in ['MD', 'RB']])
-    result = numpy.apply_along_axis(get_pos, axis=0, arr=text)
-    return result
-
-
-def get_model_verbs(pos_tag_text):
-    """Returns a column vector indicating if the instance contains a MD postag.
-    """
-    def has_modal(sentence):
-        return int(sentence[0].find('MD]]') != -1)
-    result = numpy.apply_along_axis(has_modal, axis=0, arr=pos_tag_text)
-    return csr_matrix(result).T
-
-
-def get_pos_steps():
-    return [
-        # Word features
-        ('vect', CountVectorizer(ngram_range=(1, 3), max_features=10**4)),
-        # Pos tag features
-        ('pos', Pipeline([
-            ('pos_extractor', FunctionTransformer(pos_filter)),
-            ('pos_vectorizers', FeatureUnion([
-                ('pos_vect', CountVectorizer(
-                    ngram_range=(1, 1), max_features=1000,
-                    token_pattern=u'\[\[.*?\]\]')),
-                ('modal_extractor', FunctionTransformer(get_model_verbs)),
-            ]))
-        ]))
-    ]
-
-
-def get_basic_pipeline(classifier_tuple):
-    """Returns an instance of sklearn Pipeline with the preprocess steps."""
-    features = FeatureUnion(get_pos_steps())
-    return Pipeline([
-        ('features', features),
-        ('tfidf', TfidfTransformer()),
-        classifier_tuple
-    ])
-
-
-def get_basic_parameters():
-    """Returns the possible parameters and values for the basic pipeline."""
-    pos_features = get_pos_steps()
-    return [{  # With pos
-        'features__vect__max_features': [10**3, 10**4, 10**5],
-        'features__vect__ngram_range': [(1, 1), (1, 2), (1, 3)],
-        'tfidf__use_idf': (True, False)
-    },
-    # {  # Without pos tags
-    #     'features__vect__max_features': [10**3, 10**4, 10**5],
-    #     'features__vect__ngram_range': [(1, 1), (1, 2), (1, 3)],
-    #     'features__transformer_list': pos_features[:1],
-    #     'tfidf__use_idf': (True, False)
-    # }
-    ]
-
-
-####
-
-
 def get_words_from_tree(matrix):
     """Returns a string with the words from the tree."""
     result = []
@@ -189,6 +122,38 @@ def make_flat(x_matrix):
     return new_matrix
 
 
+def get_document_comp_features(document):
+    """Returns compositional structure features for a document."""
+    features = []
+    for par_index, paragraph in enumerate(document):
+        for sent_index, sentence in enumerate(paragraph):
+            sentence_feature = [
+                par_index == 0, par_index == len(document) - 1,
+                sent_index
+            ]
+            features.append(sentence_feature)
+    return features
+
+
+def get_comp_features(x_matrix):
+    """Extracts features from the compositional structure of the document.
+
+    Each row of x_matrix represents a document, containing nested lists for
+    paragraphs and sentences.
+
+    The result has one row per sentence.
+    The features extracted are (in order):
+        - sentence is in introduction (first paragraph)
+        - sentence is in conclusion (last paragraph)
+        - sentence is in conclusion (last paragraph)
+        - sentence number in paragraph
+    """
+    features = []
+    for document in x_matrix:
+        features.extend(get_document_comp_features(document))
+    return features
+
+
 def get_tree_steps():
     """Returns the feature extractors for a nltk.tree.Tree input."""
     return {
@@ -196,8 +161,8 @@ def get_tree_steps():
             ('flatten', FunctionTransformer(make_flat, validate=False)),
             ('extractors', FeatureUnion(get_flat_features().items()))
         ]),
-        # 'compositional_features': FunctionTransformer(get_comp_features,
-        #                                               validate=False)
+        'compositional_features': FunctionTransformer(get_comp_features,
+                                                      validate=False)
     }
 
 
@@ -225,23 +190,25 @@ def get_tree_parameter_grid():
     features = get_flat_features()
 
     return {
-        # 'features__flat__extractors__transformer_list': [
-        #     features.items(),  # All fetures
-        #     [('ngrams', features['ngrams']),
-        #      ('pos_tags', features['pos_tags'])],
-        #     [('ngrams', features['ngrams']),
-        #      ('tree_metrics', features['tree_metrics'])],
-        #     [('ngrams', features['ngrams']),
-        #      ('structural_features', features['structural_features']),
-        #      ('verb_tense', features['verb_tense'])],
-        #     [('ngrams', features['ngrams']),
-        #      ('pos_tags', features['pos_tags']),
-        #      ('verb_tense', features['verb_tense'])],
-        #     [('ngrams', features['ngrams']),
-        #      ('pos_tags', features['pos_tags']),
-        #      ('structural_features', features['structural_features'])],
-        # ],
-        'features__flat__extractors__ngrams__word_counter__max_features': [10**3, 10**4],
-        'features__flat__extractors__ngrams__word_counter__ngram_range': [(1, 1), (1, 2), (1, 3)],
+        'features__flat__extractors__transformer_list': [
+            features.items(),  # All fetures
+            [('ngrams', features['ngrams']),
+             ('pos_tags', features['pos_tags'])],
+            [('ngrams', features['ngrams']),
+             ('tree_metrics', features['tree_metrics'])],
+            [('ngrams', features['ngrams']),
+             ('structural_features', features['structural_features']),
+             ('verb_tense', features['verb_tense'])],
+            [('ngrams', features['ngrams']),
+             ('pos_tags', features['pos_tags']),
+             ('verb_tense', features['verb_tense'])],
+            [('ngrams', features['ngrams']),
+             ('pos_tags', features['pos_tags']),
+             ('structural_features', features['structural_features'])],
+        ],
+        'features__flat__extractors__ngrams__word_counter__max_features':
+            [10**3, 10**4, 10**5],
+        'features__flat__extractors__ngrams__word_counter__ngram_range':
+            [(1, 1), (1, 2), (1, 3)],
         'features__flat__extractors__ngrams__tfidf__use_idf': (True, False)
     }
