@@ -12,6 +12,7 @@ import utils
 import essay_documents
 from conll_feature_extractor import ConllFeatureExtractor, get_parent_sibling
 from nltk.tree import Tree
+from scipy.sparse import csr_matrix
 
 
 class TestConllFeaturesExtractor(unittest.TestCase):
@@ -46,7 +47,7 @@ class TestConllFeaturesExtractor(unittest.TestCase):
             self.document.add_label_for_position(label, start_index, end_index)
 
     def test_instances(self):
-        """"""
+        """Test the number of obtained instances"""
         extractor = ConllFeatureExtractor(use_structural=True)
         instances = extractor.get_feature_dict([self.document])
         self.assertEqual(
@@ -142,6 +143,17 @@ class TestConllFeaturesExtractor(unittest.TestCase):
                 result.append(pair)
         for expected_pair, resulting_pair in zip(expected_pairs, result):
             self.assertEqual(expected_pair, resulting_pair)
+
+    def test_matrix(self):
+        """Test the size of the sparse matrix generated."""
+        extractor = ConllFeatureExtractor(use_structural=True)
+        self.document.parse_trees = utils.pickle_from_file(
+            os.path.join('test_files', 'parse_trees.pickle'))
+        matrix = extractor.transform([self.document])
+        self.assertIsInstance(matrix, csr_matrix)
+        self.assertEqual(
+            sum([len(sentence.words) for sentence in self.document.sentences]),
+            matrix.shape[0])
 
 
 if __name__ == '__main__':

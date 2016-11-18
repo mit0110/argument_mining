@@ -2,11 +2,14 @@
 
 import logging
 
+import numpy
 import os
 import sys
 import string
 sys.path.insert(0, os.path.abspath('..'))
+
 from collections import defaultdict
+from sklearn.feature_extraction import DictVectorizer
 from tqdm import tqdm
 
 import utils
@@ -213,3 +216,8 @@ class ConllFeatureExtractor(object):
         """Returns a numpy array with extracted features."""
         instances = self.get_feature_dict(documents)
         # Convert to matrix and return
+
+        vectorizer = DictVectorizer(dtype=numpy.int32)
+        dataset_matrix = vectorizer.fit_transform(instances)
+
+        return dataset_matrix
