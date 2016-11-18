@@ -1,7 +1,7 @@
 """Functions to convert conll formated EssayDocument into a numeric matrix."""
 
+import itertools
 import logging
-
 import numpy
 import os
 import sys
@@ -100,6 +100,7 @@ class ConllFeatureExtractor(object):
         word_position_in_paragraph = 0
         word_position_in_document = 0
         for sent_index, sentence in enumerate(document.sentences):
+            sentence_instances = []
             if sentence.position_in_paragraph == 0:
                 word_position_in_paragraph = 0
             for token_index, token, _ in sentence.iter_words():
@@ -133,13 +134,18 @@ class ConllFeatureExtractor(object):
                 features['st:pn:follows'] = prev_token in PUNCTUATION_MARKS
                 features['st:pn:follows_comma'] = prev_token == ','
                 features['st:pn:follows_semicolon'] = prev_token == ';'
+                # Is not the first word in the document
                 if not (sent_index == 0 and token_index == 0):
-                    # Is not the first word in the document
-                    instances[-1]['st:pn:preceeds'] = token in PUNCTUATION_MARKS
-                    instances[-1]['st:pn:preceeds_comma'] = token == ','
-                    instances[-1]['st:pn:preceeds_semicolon'] = token == ';'
+                    # Is the first word on the sentence
+                    if len(sentence_instances) == 0:
+                        last_feature = instances[-1][-1]
+                    else:
+                        last_feature = sentence_instances[-1]
+                    last_feature['st:pn:preceeds'] = token in PUNCTUATION_MARKS
+                    last_feature['st:pn:preceeds_comma'] = token == ','
+                    last_feature['st:pn:preceeds_semicolon'] = token == ';'
                     if features['st:tk:last']:
-                        instances[-1]['st:pn:preceeds_full_stop'] = token == '.'
+                        last_feature['st:pn:preceeds_full_stop'] = token == '.'
 
                 # Position of covering sentence
                 features['st:cs:position_in_paragraph'] = (
@@ -147,7 +153,8 @@ class ConllFeatureExtractor(object):
                 features['st:cs:position_in_document'] = (
                     sentence.position_in_document)
 
-                instances.append(features)
+                sentence_instances.append(features)
+            instances.append(sentence_instances)
         return instances
 
     def get_syntactic_features(self, document):
@@ -157,6 +164,7 @@ class ConllFeatureExtractor(object):
         instances = []
         for sent_index, sentence in enumerate(document.sentences):
             parse_tree = document.parse_trees[sent_index]
+            sentence_instances = []
             for token_index, _, pos_tag in sentence.iter_words():
                 features = defaultdict(int)
                 features['syn:pos'] = pos_tag
@@ -168,7 +176,8 @@ class ConllFeatureExtractor(object):
                     token_index, parse_tree, following=False)
                 features['syn:lca:prev'] = lca_distance
                 features['syn:lca:prev_tag'] = lca_tag
-                instances.append(features)
+                sentence_instances.append(features)
+            instances.append(sentence_instances)
         return instances
 
     def get_lexical_features(self, document):
@@ -178,6 +187,7 @@ class ConllFeatureExtractor(object):
         instances = []
         for sent_index, sentence in enumerate(document.sentences):
             parse_tree = document.parse_trees[sent_index]
+            sentence_instances = []
             for token_index, _, _ in sentence.iter_words():
                 features = defaultdict(int)
                 # Lexical head
@@ -187,18 +197,28 @@ class ConllFeatureExtractor(object):
                 labels = get_parent_sibling(parse_tree, token_index)
                 if labels:
                     features['ls:right_comb'] = '-'.join(labels)
-                instances.append(features)
+                sentence_instances.append(features)
+            instances.append(sentence_instances)
         return instances
 
     @staticmethod
     def combine_features(features_list):
         """Combines a list of list of feature dictionaries row by row."""
-        max_size = max([len(features) for features in features_list])
-        instances = [{} for _ in range(max_size)]
-        for features in features_list:
-            assert len(features) == max_size or len(features) == 0
-            for row_index, dictionary in enumerate(features):
-                instances[row_index].update(dictionary)
+        sentence_number = max([len(features) for features in features_list])
+        # Create a list for each sentence. Inside the list, it will be an
+        instances = [[] for _ in range(sentence_number)]
+        for feature_type in features_list:
+            assert (len(feature_type) == sentence_number
+                    or len(feature_type) == 0)
+            if len(feature_type) == 0:
+                continue
+            for sentence_index, sentence_features in enumerate(feature_type):
+                if len(instances[sentence_index]) == 0:
+                    instances[sentence_index] = [
+                        {} for _ in range(len(sentence_features))]
+                for word_index, feature_dictionary in enumerate(sentence_features):
+                    instances[sentence_index][word_index].update(
+                        feature_dictionary)
         return instances
 
     def get_feature_dict(self, documents):
@@ -214,7 +234,7 @@ class ConllFeatureExtractor(object):
 
     def transform(self, documents):
         """Returns a numpy array with extracted features."""
-        instances = self.get_feature_dict(documents)
+        instances = list(itertools.chain(*self.get_feature_dict(documents)))
         # Convert to matrix and return
 
         vectorizer = DictVectorizer(dtype=numpy.int32)

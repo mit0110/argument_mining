@@ -52,12 +52,12 @@ class TestConllFeaturesExtractor(unittest.TestCase):
         instances = extractor.get_feature_dict([self.document])
         self.assertEqual(
             sum([len(sentence.words) for sentence in self.document.sentences]),
-            len(instances))
+            sum([len(sentence_features) for sentence_features in instances]))
 
     def test_structural_features(self):
         extractor = ConllFeatureExtractor(use_structural=True)
         # Sentence 3 word 0, From
-        features = extractor.get_structural_features(self.document)[49]
+        features = extractor.get_structural_features(self.document)[3][0]
         # Token position features
         self.assertEqual(True, features['st:tk:introduction'])
         self.assertEqual(False, features['st:tk:conclusion'])
@@ -86,7 +86,7 @@ class TestConllFeaturesExtractor(unittest.TestCase):
         """Test the puntuation features of the first word of the document"""
         extractor = ConllFeatureExtractor(use_structural=True)
         # Sentence 3 word 0, From
-        features = extractor.get_structural_features(self.document)[0]
+        features = extractor.get_structural_features(self.document)[0][0]
         # Punctuation features
         self.assertEqual(True, features['st:pn:preceeds'])
         self.assertEqual(False, features['st:pn:follows'])
@@ -105,7 +105,7 @@ class TestConllFeaturesExtractor(unittest.TestCase):
                                           use_syntactic=True)
         self.document.parse_trees = utils.pickle_from_file(
             os.path.join('test_files', 'parse_trees.pickle'))
-        features = extractor.get_syntactic_features(self.document)[49]
+        features = extractor.get_syntactic_features(self.document)[3][0]
         self.assertEqual('IN', features['syn:pos'])
         self.assertEqual(2, features['syn:lca:next'])
         self.assertEqual('PP', features['syn:lca:next_tag'])
@@ -118,7 +118,7 @@ class TestConllFeaturesExtractor(unittest.TestCase):
                                           use_lexical=True)
         self.document.parse_trees = utils.pickle_from_file(
             os.path.join('test_files', 'parse_trees.pickle'))
-        features = extractor.get_lexical_features(self.document)[49]
+        features = extractor.get_lexical_features(self.document)[3][0]
         self.assertEqual('PP[From/IN]', features['ls:token_comb'])
         self.assertEqual('IN[From/IN]-NP[perspective/NN]',
                          features['ls:right_comb'])
