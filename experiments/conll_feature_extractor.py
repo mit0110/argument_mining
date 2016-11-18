@@ -13,19 +13,89 @@ import utils
 
 PUNCTUATION_MARKS = set(string.punctuation)
 
+
+def split_lexical_node(label):
+    """Splits a lexical node label into component label, token and pos tag.
+
+    For example, 'PP[From/IN]' -> 'PP', 'From', 'IN'
+    """
+    tag, token_pos = label.split('[')
+    token, pos = token_pos.strip(']').split('/')
+    return tag, token, pos
+
+
+def get_neightbor_lca(leaf_position, tree, following=True):
+    """Gets the lenght and label of the path to the Lowest Common Ancestor.
+
+    Args:
+        leaf_position, integer. Position of the word in the
+            tree leaves.
+        tree: a nltk.tree.Tree instance.
+        following: if True, the distance is computed with the following
+            neightbor
+
+    If the position is in the edge of the tree, the distance is the height of
+    the tree plus one and the label is an empty string.
+    Based in:
+    http://stackoverflow.com/questions/28681741/find-a-path-in-an-nltk-tree-tree
+    """
+    if following and leaf_position >= len(tree.leaves()) - 1:
+        return tree.height() + 1, ''
+    if (not following) and leaf_position < 1:
+        return tree.height() + 1, ''
+    index = 0
+    location1 = tree.leaf_treeposition(leaf_position)
+    location2 = tree.leaf_treeposition(leaf_position + (1 if following else -1))
+    while (index < len(location1) and index < len(location2)
+            and location1[index] == location2[index]):
+        index += 1
+    tag = tree[location1[:index]].label()
+    return index, split_lexical_node(tag)[0]
+
+
+def get_ancestor_by_tag(tree, start_position):
+    """Returns the upper most ancestor node of start_position where the label
+    of start_position is contained in the label of the ancestor."""
+    position = tree.leaf_treeposition(start_position)
+    label = tree[position]
+    if hasattr(label, 'label'):  # start position is not a leaf
+        label = label.label()
+    ancestor_position = position
+    for index in range(1, len(position)):
+        if label not in tree[position[:-1*index]].label():
+            if index == 1:  # The parent has a different label
+                return label
+            return tree[ancestor_position].label()
+        ancestor_position = ancestor_position[:-1]
+
+def get_parent_sibling(parse_tree, start_position):
+    """Returns the labels of the parent and the right sibling of start_position.
+    """
+    parent_position = parse_tree.leaf_treeposition(start_position)[:-1]
+    right_position = parent_position[:-1] + (parent_position[-1] + 1,)
+    if (start_position < len(parse_tree.leaves()) - 1 and
+            right_position in parse_tree.treepositions()):
+        return (parse_tree[parent_position].label(),
+                parse_tree[right_position].label())
+    return None
+
+
 class ConllFeatureExtractor(object):
     """Converts EssayDocument list into numeric matrix."""
 
-    def __init__(self, use_structural=True):
+    def __init__(self, use_structural=True, use_syntactic=False,
+                 use_lexical=False):
         self.use_structural = use_structural
+        self.use_syntactic = use_syntactic
+        self.use_lexical = use_lexical
 
     def get_structural_features(self, document):
         """Adds structural features to the dictionary features."""
+        instances = []
         if not self.use_structural:
-            return
+            return instances
         word_position_in_paragraph = 0
         word_position_in_document = 0
-        instances = []
         for sent_index, sentence in enumerate(document.sentences):
             if sentence.position_in_paragraph == 0:
                 word_position_in_paragraph = 0
@@ -77,12 +147,66 @@ class ConllFeatureExtractor(object):
                 instances.append(features)
         return instances
 
+    def get_syntactic_features(self, document):
+        """Returns a list of dictionaries with syntactic features."""
+        if not self.use_syntactic:
+            return []
+        instances = []
+        for sent_index, sentence in enumerate(document.sentences):
+            parse_tree = document.parse_trees[sent_index]
+            for token_index, _, pos_tag in sentence.iter_words():
+                features = defaultdict(int)
+                features['syn:pos'] = pos_tag
+                lca_distance, lca_tag = get_neightbor_lca(
+                    token_index, parse_tree, following=True)
+                features['syn:lca:next'] = lca_distance
+                features['syn:lca:next_tag'] = lca_tag
+                lca_distance, lca_tag = get_neightbor_lca(
+                    token_index, parse_tree, following=False)
+                features['syn:lca:prev'] = lca_distance
+                features['syn:lca:prev_tag'] = lca_tag
+                instances.append(features)
+        return instances
+
+    def get_lexical_features(self, document):
+        """Returns a list of dictionaries with syntactic features."""
+        if not self.use_lexical:
+            return []
+        instances = []
+        for sent_index, sentence in enumerate(document.sentences):
+            parse_tree = document.parse_trees[sent_index]
+            for token_index, _, _ in sentence.iter_words():
+                features = defaultdict(int)
+                # Lexical head
+                features['ls:token_comb'] = get_ancestor_by_tag(parse_tree,
+                                                                token_index)
+                # parent's sibling
+                labels = get_parent_sibling(parse_tree, token_index)
+                if labels:
+                    features['ls:right_comb'] = '-'.join(labels)
+                instances.append(features)
+        return instances
+
+    @staticmethod
+    def combine_features(features_list):
+        """Combines a list of list of feature dictionaries row by row."""
+        max_size = max([len(features) for features in features_list])
+        instances = [{} for _ in range(max_size)]
+        for features in features_list:
+            assert len(features) == max_size or len(features) == 0
+            for row_index, dictionary in enumerate(features):
+                instances[row_index].update(dictionary)
+        return instances
+
     def get_feature_dict(self, documents):
-        """Returns a dictionary of features."""
+        """Returns a list of dictionaries of features, one per instance."""
         instances = []
         for document in tqdm(documents):
             structural_features = self.get_structural_features(document)
-            instances.extend(structural_features)
+            syntactic_features = self.get_syntactic_features(document)
+            lexical_features = self.get_lexical_features(document)
+            instances.extend(self.combine_features(
+                [structural_features, syntactic_features, lexical_features]))
         return instances
 
     def transform(self, documents):

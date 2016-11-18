@@ -26,11 +26,11 @@ import re
 import os
 import sys
 sys.path.insert(0, os.path.abspath('..'))
-from nltk.parse.stanford import StanfordParser
 
 import utils
 from tqdm import tqdm
 from essay_documents import EssayDocument
+from lexicalized_stanford_parser import LexicalizedStanfordParser
 
 
 class EssayDocumentFactory(object):
@@ -92,7 +92,7 @@ def get_input_files(input_dirpath, pattern, limit=-1):
         if re.match(pattern, filename) and os.path.isfile(os.path.join(
                 input_dirpath, filename)):
             result.append(os.path.join(input_dirpath, filename))
-        if len(result) > limit:
+        if len(result) >= limit:
             break
     return result
 
@@ -103,7 +103,7 @@ def main():
     documents = []
     filenames = get_input_files(args['input_dirpath'], r'.*txt',
                                 int(args['limit']))
-    parser = StanfordParser(
+    parser = LexicalizedStanfordParser(
         model_path='edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz',
         encoding='utf8')
     for filename in tqdm(filenames):
