@@ -241,3 +241,12 @@ class ConllFeatureExtractor(object):
         dataset_matrix = vectorizer.fit_transform(instances)
 
         return dataset_matrix
+
+
+def get_labels_from_documents(documents):
+    """Returns a concatenation of labels of the sentences in documents."""
+    labels = []
+    for document in documents:
+        for sentence in document.sentences:
+            labels.append(sentence.labels)
+    return labels

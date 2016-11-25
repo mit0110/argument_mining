@@ -38,8 +38,15 @@ class Sentence(object):
         pos_tags = pos_tagger(raw_words)
         last_position = 0
         for word, pos in pos_tags:
-            last_position = text[last_position:].find(word) + last_position
-            assert last_position >= 0
+            word_position = text[last_position:].find(word) + last_position
+            if word_position < 0:
+                if word == u'``':
+                    word_position = text[last_position:].find(
+                        '"') + last_position
+                else:
+                    raise IndexError('Word {} not in sentence {}'.format(
+                        word, text))
+            last_position = word_position
             self.add_word(word, pos, last_position + initial_position,
                           self.default_label)
 
