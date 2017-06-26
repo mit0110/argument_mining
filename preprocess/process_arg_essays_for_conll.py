@@ -116,6 +116,5 @@ def main():
     utils.pickle_to_file(documents, args['output_file'])
 
 
-
 if __name__ == '__main__':
     main()

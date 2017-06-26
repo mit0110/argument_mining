@@ -1,11 +1,8 @@
 """Base preprocess pipeline common for all classifiers."""
 
-import itertools
-import nltk
 import numpy
 import string
 
-from scipy.sparse import csr_matrix
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.pipeline import Pipeline, FeatureUnion

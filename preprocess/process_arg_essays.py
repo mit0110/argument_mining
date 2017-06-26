@@ -17,7 +17,6 @@ Options:
 import logging
 logging.basicConfig(level=logging.INFO)
 import nltk
-import numpy
 import re
 import os
 

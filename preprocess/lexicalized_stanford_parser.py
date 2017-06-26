@@ -2,7 +2,6 @@
 
 from nltk.parse.stanford import StanfordParser
 
-
 class LexicalizedStanfordParser(StanfordParser):
     """Wrapper class for StanfordParser with lexicalized output."""
 
@@ -43,8 +42,6 @@ class LexicalizedStanfordParser(StanfordParser):
         :type sentences: list(str)
         :rtype: iter(iter(Tree))
         """
-        print 'lalalal'
-        print self._OUTPUT_FORMAT_OPTIONS
         cmd = [
             self._MAIN_CLASS,
             '-model', self.model_path,

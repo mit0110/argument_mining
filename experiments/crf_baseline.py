@@ -16,7 +16,6 @@ sys.path.insert(0, os.path.abspath('..'))
 sys.path.insert(0, os.path.abspath('../preprocess/'))
 
 import itertools
-import essay_documents
 import evaluation
 import conll_feature_extractor
 import sklearn_crfsuite

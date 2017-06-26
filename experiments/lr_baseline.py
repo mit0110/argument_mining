@@ -9,7 +9,6 @@ Options:
 """
 
 import logging
-logging.basicConfig(level=logging.INFO, filename='logs/log-lr')
 import os
 import sys
 sys.path.insert(0, os.path.abspath('..'))
@@ -19,6 +18,8 @@ import process_pipeline
 import utils
 
 from sklearn.linear_model import LogisticRegression
+
+logging.basicConfig(level=logging.INFO, filename='logs/log-lr')
 
 
 def get_optimized_params():

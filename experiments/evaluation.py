@@ -1,31 +1,30 @@
 """Functions to evaluates a classifier"""
 
+from __future__ import print_function
+
 import copy
 import json
 import logging
-logging.basicConfig(level=logging.INFO)
 import numpy
 import warnings
 from sklearn.exceptions import UndefinedMetricWarning
 
+logging.basicConfig(level=logging.INFO)
 warnings.filterwarnings('ignore', category=UndefinedMetricWarning)
 warnings.filterwarnings('ignore', category=DeprecationWarning)
 warnings.filterwarnings('ignore', category=UserWarning)
 
 import process_pipeline
 
-from sklearn.cross_validation import cross_val_score
 from sklearn.metrics import (classification_report, confusion_matrix,
                              precision_recall_fscore_support, f1_score)
 from sklearn.model_selection import train_test_split
-from sklearn.model_selection import GridSearchCV
-from sklearn.pipeline import Pipeline, FeatureUnion
 
 from tqdm import tqdm
 
 
 def deep_evaluate(x_matrix, y_vector, classifier, folds=5):
-    """Prints the classification report for folds tratified split of x_matrix.
+    """Prints the classification report for folds stratified split of x_matrix.
     """
     logging.info('Deep evaluating classifier {}'.format(classifier))
     x_matrix = numpy.array(x_matrix).squeeze()  # Removes extra dimensions
@@ -112,7 +111,7 @@ class GridSearchCustom(object):
         self.total_iterations = 1
         for values in parameters.values():
             self.total_iterations = self.total_iterations * len(values)
-        print 'Recursive class: {}'.format(self.total_iterations)
+        print('Recursive class: {}'.format(self.total_iterations))
         logging.info('Recursive class: {}'.format(self.total_iterations))
 
         self.x_train, self.x_test, self.y_train, self.y_test = train_test_split(
@@ -132,8 +131,8 @@ class GridSearchCustom(object):
         # Base case
         if parameters == {}:
             self.iterations += 1
-            print 'iteration {}/{}'.format(self.iterations,
-                                           self.total_iterations)
+            print('iteration {}/{}'.format(self.iterations,
+                                           self.total_iterations))
             score = self.get_f1_score()
             self.log_parameters(used_parameters, score)
             self.recursion_level -= 1

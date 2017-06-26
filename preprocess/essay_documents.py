@@ -1,7 +1,4 @@
 """Abstractions to handle EssayDocuments"""
-
-import six
-
 from nltk import pos_tag as pos_tagger
 from nltk.tokenize import sent_tokenize, word_tokenize
 
@@ -89,6 +86,9 @@ class Sentence(object):
     def __len__(self):
         return len(self.words)
 
+    def __repr__(self):
+        return ' '.join(self.words)
+
 
 class EssayDocument(object):
     def __init__(self, identifier, default_label='O', title=''):
@@ -102,7 +102,7 @@ class EssayDocument(object):
         self.parse_trees = []
 
     def build_from_text(self, text, start_index=0):
-        self.text = text.decode('utf8')
+        self.text = text
         paragraphs = self.text.split('\n')
         position_in_document = 0
         for paragraph_index, paragraph in enumerate(paragraphs):

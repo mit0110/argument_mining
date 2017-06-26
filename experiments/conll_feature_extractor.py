@@ -1,18 +1,12 @@
 """Functions to convert conll formated EssayDocument into a numeric matrix."""
 
 import itertools
-import logging
 import numpy
-import os
-import sys
 import string
-sys.path.insert(0, os.path.abspath('..'))
 
 from collections import defaultdict
 from sklearn.feature_extraction import DictVectorizer
 from tqdm import tqdm
-
-import utils
 
 PUNCTUATION_MARKS = set(string.punctuation)
 
