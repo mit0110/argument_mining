@@ -30,7 +30,8 @@ class TestFeatureExtractor(unittest.TestCase):
 class TestLabeledSentencesExtractor(unittest.TestCase):
     """Test for the LabeledSentencesExtractor class."""
 
-    DOCUMENT = (u"Can petrol price increase impact on reducing traffic and "
+    DOCUMENT = (
+        u"Can petrol price increase impact on reducing traffic and "
         "pollution?\n\nNowadays, the importance of vehicles has been widely "
         "recognized thoughout the world. However, it rises concerns about the "
         "increasingly severe traffic problems as well as the automobile exhaust"
@@ -45,7 +46,8 @@ class TestLabeledSentencesExtractor(unittest.TestCase):
         "families purchase even more than three cars just for their own sake. "
         "In such case if they must pay more money on fuel, they may consider "
         "about that price of purchasing additionally for more time.\n")
-    LABELS = (u"T2\tClaim 384 415\ttheir view is overly simplistic\nA1\tStance "
+    LABELS = (
+        u"T2\tClaim 384 415\ttheir view is overly simplistic\nA1\tStance "
         "T2 For\nT3\tClaim 429 510\tmaking the fuel cost more money could limit"
         " the number of vehicles to some extent\nT4\tPremise 512 669\tDue to "
         "the increasing number of petrol stations, the competition in this "
@@ -101,12 +103,13 @@ class TestLabeledSentencesExtractor(unittest.TestCase):
         }
         self.assertEqual(sorted(expected_keys.keys()),
                          sorted(self.extractor.raw_labels.keys()))
-        for key, label in expected_keys.iteritems():
+        for key, label in expected_keys.items():
             self.assertEqual(label, self.extractor.raw_labels[key][0])
 
     def test_get_label_for_sentence(self):
         self.extractor._get_labels()
-        sentence = ('Therefore, those who are suffering from the inefficiency '
+        sentence = (
+            'Therefore, those who are suffering from the inefficiency '
             'of public transport tend to own a car immediately.')
         expected_label = 'Premise'
         start_index = self.DOCUMENT.find(sentence)

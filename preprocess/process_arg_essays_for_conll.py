@@ -1,14 +1,6 @@
 """Script to preprocess the Argumentative Essays dataset.
 
-The output is a numeric matrix stored in 4 files:
-x_train.pickle The numeric matrix to use for training a classifier.
-y_train.pickle The true labels of each element in x_train.
-x_test.pickle The numeric matrix to use for training a classifier.
-y_test.pickle The true labels of each element in x_train.
-
-Each instance is a sequence of words (document), and each label is list of
-BIO tags. Each tag corresponds in order to the words in the document.
-The tags also indicates the type of component: B-mc, B-c, B-p, O (none).
+The output is a pickled list of EssayDocuments.
 
 Usage:
     process_arg_essays_for_conll.py --input_dirpath=<dirpath> --output_file=<file> [--limit=<N>] [--parse_trees]
