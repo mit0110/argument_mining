@@ -8,7 +8,8 @@ Options:
 """
 
 import logging
-logging.basicConfig(level=logging.INFO, filename='logs/log-crf')
+logging.basicConfig(level=logging.INFO, filename='logs/log-crf',
+                    format='%(message)s')
 
 import os
 import sys

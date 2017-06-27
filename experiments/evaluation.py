@@ -9,7 +9,7 @@ import numpy
 import warnings
 from sklearn.exceptions import UndefinedMetricWarning
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO, format='%(message)s')
 warnings.filterwarnings('ignore', category=UndefinedMetricWarning)
 warnings.filterwarnings('ignore', category=DeprecationWarning)
 warnings.filterwarnings('ignore', category=UserWarning)

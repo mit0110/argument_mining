@@ -128,4 +128,8 @@ class EssayDocument(object):
 
     def parse_text(self, parser):
         for sentence in self.sentences:
-            self.parse_trees.append(parser.parse(sentence.words).next())
+            self.parse_trees.append(next(parser.parse(sentence.words)))
+
+    def __repr__(self):
+        return self.identifier
+
