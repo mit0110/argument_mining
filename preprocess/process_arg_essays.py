@@ -1,17 +1,20 @@
 """Script to preprocess the Argumentative Essays dataset.
 
 The output is a pickled tuple.
-If --raw_text is true, the first element is a 2D numeric matrix, where
-instances are separated by document and by sentence. The second is a 2D matrix
+If --raw_text is present, the first element is a 2D numeric matrix, where
+instances are separated by document and by sentence. If --raw_text is not
+present, the first element of the tuple is a list of EssayDocuments.
+The second is a 2D matrix
 with the labels for each sentence.
 
 Usage:
-    process_arg_essays.py --input_dirpath=<dirpath> --output_filename=<filename> [--raw_text]
+    process_arg_essays.py --input_dirpath=<dirpath> --output_filename=<filename> [--raw_text] [--limit=<N>]
 
 Options:
-   --input_dirpath=<dirpath>        The path to directory to read files.
-   --output_filename=<filename>     The path to directory to store files.
-   --raw_text                       Save only sentences without process.
+    --input_dirpath=<dirpath>        The path to directory to read files.
+    --output_filename=<filename>     The path to directory to store files.
+    --limit=<N>                  The number of files to read. -1 for all. [default: -1]
+    --raw_text                       Save only sentences without process.
 """
 
 import logging
@@ -154,10 +157,12 @@ class FeatureExtractor(object):
         return dict(sentence_ngrams)
 
 
-def get_input_files(input_dirpath, pattern):
+def get_input_files(input_dirpath, pattern, limit=-1):
     """Returns the names of the files in input_dirpath that matches pattern."""
     all_files = os.listdir(input_dirpath)
-    for filename in all_files:
+    if limit < 0:
+        limit = len(all_files)
+    for filename in all_files[:limit]:
         if re.match(pattern, filename) and os.path.isfile(os.path.join(
                 input_dirpath, filename)):
             yield os.path.join(input_dirpath, filename)
@@ -168,7 +173,8 @@ def main():
     args = utils.read_arguments(__doc__)
     sentences = []
     labels = []
-    for filename in get_input_files(args['input_dirpath'], r'.*txt'):
+    for filename in get_input_files(args['input_dirpath'], r'.*txt',
+                                    args['limit']):
         with LabeledSentencesExtractor(filename) as instance_extractor:
             labeled_senteces = instance_extractor.get_labeled_sentences()
             sentences.append(labeled_senteces[0])
