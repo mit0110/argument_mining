@@ -1,11 +1,13 @@
 """Train a CRF with conll formated dataset.
 
 Usage:
-    crf_baseline.py --input_filename=<filename>
+    crf_baseline.py --input_filename=<filename> [--search_grid]
 
 Options:
-   --input_filename <filename>      The path to directory to read the dataset.
+    --input_filename <filename>      The path to directory to read the dataset.
+    --search_grid                    Make extensive classifier parameter search
 """
+from __future__ import print_function
 
 import logging
 logging.basicConfig(level=logging.INFO, filename='logs/log-crf',
@@ -19,10 +21,14 @@ sys.path.insert(0, os.path.abspath('../preprocess/'))
 import itertools
 import evaluation
 import conll_feature_extractor
+import scipy
 import sklearn_crfsuite
 import utils
 
 from sklearn.model_selection import train_test_split
+from sklearn.grid_search import RandomizedSearchCV
+
+from sklearn import metrics
 
 
 def main():
@@ -30,7 +36,11 @@ def main():
     args = utils.read_arguments(__doc__)
     documents = utils.pickle_from_file(args['input_filename'])
 
-    transformer = conll_feature_extractor.ConllFeatureExtractor()
+    transformer = conll_feature_extractor.ConllFeatureExtractor(
+        use_structural=True, use_syntactic=True, use_lexical=True)
+    # Extract instances and labels. Each instance is a sentence, represented as
+    # a list of feature dictionaries for each work. Labels are represented as
+    # a list of word labels.
     instances = transformer.get_feature_dict(documents)
     labels = conll_feature_extractor.get_labels_from_documents(documents)
 
@@ -42,10 +52,28 @@ def main():
         all_possible_transitions=True
     )
 
-    classifier.fit(x_train, y_train)
-    predictions = list(itertools.chain(*classifier.predict(x_test)))
+    if not args['search_grid']:
+        classifier.fit(x_train, y_train)
+        predictions = list(itertools.chain(*classifier.predict(x_test)))
 
-    evaluation.log_report(predictions, list(itertools.chain(*y_test)))
+        evaluation.log_report(predictions, list(itertools.chain(*y_test)))
+    else:
+        label_names = list(classifier.classes_)
+        label_names.remove('O')
+        params_space = {
+            'c1': scipy.stats.expon(scale=0.5),
+            'c2': scipy.stats.expon(scale=0.05),
+        }
+        f1_scorer = metrics.make_scorer(sklearn_crfsuite.metrics.flat_f1_score,
+                                        average='weighted', labels=label_names)
+        # search
+        rs = RandomizedSearchCV(
+            classifier, params_space, cv=3, verbose=1, n_jobs=-1, n_iter=50,
+            scoring=f1_scorer)
+        rs.fit(x_train, y_train)
+        print('best params:', rs.best_params_)
+        print('best CV score:', rs.best_score_)
+        print('model size: {:0.2f}M'.format(rs.best_estimator_.size_ / 1000000))
 
 
 if __name__ == '__main__':

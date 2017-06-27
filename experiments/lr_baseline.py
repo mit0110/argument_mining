@@ -4,8 +4,8 @@ Usage:
     lr_baseline.py --input_filename=<filename> [--search_grid]
 
 Options:
-   --input_filename=<filename>      The path to directory to read the dataset.
-   --search_grid                    Make extensive parameter search
+    --input_filename=<filename>      The path to directory to read the dataset.
+    --search_grid                    Make extensive parameter search
 """
 
 import logging

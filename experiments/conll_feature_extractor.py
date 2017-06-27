@@ -210,7 +210,8 @@ class ConllFeatureExtractor(object):
                 if len(instances[sentence_index]) == 0:
                     instances[sentence_index] = [
                         {} for _ in range(len(sentence_features))]
-                for word_index, feature_dictionary in enumerate(sentence_features):
+                for word_index, feature_dictionary in enumerate(
+                        sentence_features):
                     instances[sentence_index][word_index].update(
                         feature_dictionary)
         return instances
