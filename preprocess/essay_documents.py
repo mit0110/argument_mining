@@ -1,4 +1,6 @@
 """Abstractions to handle EssayDocuments"""
+from collections import defaultdict
+
 from nltk import pos_tag as pos_tagger
 from nltk.tokenize import sent_tokenize, word_tokenize
 
@@ -83,6 +85,12 @@ class Sentence(object):
         for index, (token, tag) in enumerate(zip(self.words, self.pos)):
             yield index, token, tag
 
+    @property
+    def has_label(self):
+        """Returns true if any word in the sentence is labeled with other than
+        the default label."""
+        return len(set(self.labels)) > 1 or self.labels[0] != self.default_label
+
     def __len__(self):
         return len(self.words)
 
@@ -132,4 +140,25 @@ class EssayDocument(object):
 
     def __repr__(self):
         return self.identifier
+
+    def sample_labeled_text(self, limit=10, styles=None):
+        sample = ''
+        if styles is None:
+            styles = defaultdict(lambda: '**')  # boldtext
+        for sentence in self.sentences[:limit]:
+            if not sentence.has_label:
+                continue
+            for word, label in zip(sentence.words, sentence.labels):
+                if label == self.default_label:
+                    sample += word + ' '
+                else:
+                    sample += styles[label] + word + styles[label] + ' '
+            sample += '\n\n'
+        return sample
+
+    def get_word_label_list(self):
+        """Returns a tuple with the list of words and the list of labels"""
+        words = [w for sentence in self.sentences for w in sentence.words]
+        labels = [l for sentence in self.sentences for l in sentence.labels]
+        return words, labels
 

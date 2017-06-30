@@ -21,18 +21,19 @@ sys.path.insert(0, os.path.abspath('..'))
 
 import utils
 from tqdm import tqdm
-from essay_documents import EssayDocument
-from lexicalized_stanford_parser import LexicalizedStanfordParser
+from preprocess.essay_documents import EssayDocument
+from preprocess.lexicalized_stanford_parser import LexicalizedStanfordParser
 
 
 class EssayDocumentFactory(object):
     """Builds a EssayDocument from input_file."""
-    def __init__(self, input_filename):
+    def __init__(self, input_filename, id_sufix=''):
         self.input_filename = input_filename
         self.label_input_file = None
         self.instance_input_file = None
         self.raw_labels = []
         self.sentences = []
+        self.id_sufix = id_sufix
         self.title = ''
 
     def __enter__(self):
@@ -48,16 +49,23 @@ class EssayDocumentFactory(object):
     def get_labels(self):
         """Read labels from the annotation file.
 
-        Each label is a map
-            start_index -> (label type, component text).
         Saves the resulting labels in self.raw_labels
         """
         self.raw_labels = []
         for line in self.label_input_file.readlines():
             if line == '' or not line.startswith('T'):
                 continue
-            label_info = line.split('\t')[1]
-            self.raw_labels.append(label_info.split())
+            label = line.split('\t')[1]
+            # label has shape label start end;start end; ...
+            if ';' in label:  # The label has several fragments:
+                label_name, indices = label.split(' ', 1)
+                label_fragments = []
+                for fragment in indices.split(';'):
+                    start, end = fragment.split()
+                    label_fragments.append((label_name, start, end))
+            else:
+                label_fragments = [label.split()]
+            self.raw_labels.extend(label_fragments)
 
     def build_document(self):
         """Creates a new EssayDocument instance."""
@@ -65,8 +73,8 @@ class EssayDocumentFactory(object):
             self.get_labels()
         title = self.instance_input_file.readline()
         content = self.instance_input_file.read()
-        document = EssayDocument(os.path.basename(self.input_filename),
-                                 title=title)
+        document = EssayDocument(
+            os.path.basename(self.input_filename) + self.id_sufix, title=title)
         document.build_from_text(content, start_index=len(title) + 1)
         for label, start_index, end_index in self.raw_labels:
             document.add_label_for_position(label, int(start_index),
