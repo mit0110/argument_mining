@@ -91,6 +91,17 @@ class Sentence(object):
         the default label."""
         return len(set(self.labels)) > 1 or self.labels[0] != self.default_label
 
+    def pretty_print(self, styles=None):
+        if styles is None:
+            styles = defaultdict(lambda: '**')  # boldtext
+        result = ''
+        for word, label in zip(self.words, self.labels):
+            if label == self.default_label:
+                result += word + ' '
+            else:
+                result += styles[label] + word + styles[label] + ' '
+        return result
+
     def __len__(self):
         return len(self.words)
 
@@ -143,17 +154,10 @@ class EssayDocument(object):
 
     def sample_labeled_text(self, limit=10, styles=None):
         sample = ''
-        if styles is None:
-            styles = defaultdict(lambda: '**')  # boldtext
         for sentence in self.sentences[:limit]:
             if not sentence.has_label:
                 continue
-            for word, label in zip(sentence.words, sentence.labels):
-                if label == self.default_label:
-                    sample += word + ' '
-                else:
-                    sample += styles[label] + word + styles[label] + ' '
-            sample += '\n\n'
+            sample += sentence.pretty_print(styles) + '\n\n'
         return sample
 
     def get_word_label_list(self):

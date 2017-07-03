@@ -27,13 +27,13 @@ from preprocess.lexicalized_stanford_parser import LexicalizedStanfordParser
 
 class EssayDocumentFactory(object):
     """Builds a EssayDocument from input_file."""
-    def __init__(self, input_filename, id_sufix=''):
+    def __init__(self, input_filename, identifier=None):
         self.input_filename = input_filename
         self.label_input_file = None
         self.instance_input_file = None
         self.raw_labels = []
         self.sentences = []
-        self.id_sufix = id_sufix
+        self.identifier = identifier or input_filename
         self.title = ''
 
     def __enter__(self):
@@ -73,8 +73,7 @@ class EssayDocumentFactory(object):
             self.get_labels()
         title = self.instance_input_file.readline()
         content = self.instance_input_file.read()
-        document = EssayDocument(
-            os.path.basename(self.input_filename) + self.id_sufix, title=title)
+        document = EssayDocument(self.identifier, title=title)
         document.build_from_text(content, start_index=len(title) + 1)
         for label, start_index, end_index in self.raw_labels:
             document.add_label_for_position(label, int(start_index),
