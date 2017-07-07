@@ -38,7 +38,8 @@ def get_non_empty_filenames(input_dirpath, pattern, size_limit=500):
             result[filename] = filepath
     return result
 
-def get_annotated_filenames():
+
+def get_filenames_by_annotator():
     files = defaultdict(lambda: {})
     for name, annotator in ANNOTATORS.items():
         annotator['files'] = get_non_empty_filenames(
@@ -48,24 +49,40 @@ def get_annotated_filenames():
             files[filename][name] = filepath
     return files
 
+
+def get_filenames():
+    filenames = {}
+    for name, annotator in ANNOTATORS.items():
+        for filename in get_non_empty_filenames(
+                os.path.join(ANNOTATIONS_DIR, annotator['dirname']),
+                ANNOTATION_FORMAT).values():
+            filenames[name] = filename
+    return filenames
+
+
 def get_annotated_documents():
-    files = get_annotated_filenames()
+    files = get_filenames_by_annotator()
     document_pairs = []
     for value in files.values():
         if len(value) < 2:
             continue
-        annotations = {}
-        for name, filename in value.items():
-            identifier = 'Case: {} - Ann: {}'.format(
-                os.path.basename(filename[:-4]).replace(
-                    'CASE_OF__', '').replace('_', ' '),
-                name[0].title())
-            with process_arg_essays_for_conll.EssayDocumentFactory(
-                    filename.replace('ann', 'txt'), identifier) as instance_extractor:
-                annotations[name] = instance_extractor.build_document()
+        annotations = read_annotations(value.items())
         for ann1, ann2 in list(itertools.combinations(annotations.keys(), 2)):
             document_pairs.append((annotations[ann1], annotations[ann2]))
     return document_pairs
+
+
+def read_annotations(filenames):
+    annotations = {}
+    for name, filename in filenames:
+        identifier = 'Case: {} - Ann: {}'.format(
+            os.path.basename(filename[:-4]).replace(
+                'CASE_OF__', '').replace('_', ' '),
+            name[0].title())
+        with process_arg_essays_for_conll.EssayDocumentFactory(
+                filename.replace('ann', 'txt'), identifier) as instance_extractor:
+            annotations[name] = instance_extractor.build_document()
+    return annotations
 
 
 def get_labels(doc1, doc2):
