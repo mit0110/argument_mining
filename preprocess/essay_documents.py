@@ -122,7 +122,7 @@ class EssayDocument(object):
         self.annotated_components = {}
         self.named_components = {} # Temporal map to store the original names
         # of the components to read relations later.
-        self.annotated_relations = []
+        self.annotated_relations = defaultdict(dict)
 
     def build_from_text(self, text, start_index=0):
         self.text = text
@@ -152,6 +152,12 @@ class EssayDocument(object):
     def add_component(self, name, start, end):
         self.annotated_components[start] = end
         self.named_components[name] = start
+
+    def add_relation(self, label, arg1, arg2):
+        print(label, arg1, arg2)
+        start1 = self.named_components[arg1]
+        start2 = self.named_components[arg2]
+        self.annotated_relations[start1][start2] = label
 
     def parse_text(self, parser):
         for sentence in self.sentences:

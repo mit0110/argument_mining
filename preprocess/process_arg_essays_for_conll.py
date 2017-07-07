@@ -35,6 +35,7 @@ class EssayDocumentFactory(object):
         self.sentences = []
         self.identifier = identifier or input_filename
         self.title = ''
+        self.raw_relations = []
 
     def __enter__(self):
         self.label_input_file = open(
@@ -53,19 +54,32 @@ class EssayDocumentFactory(object):
         """
         self.raw_labels = {}
         for line in self.label_input_file.readlines():
-            if line == '' or not line.startswith('T'):
+            if line == '':
                 continue
-            component_name, label, _ = line.split('\t', 2)
-            # label has shape label start end;start end; ...
-            if ';' in label:  # The label has several fragments:
-                label_name, indices = label.split(' ', 1)
-                label_fragments = []
-                for fragment in indices.split(';'):
-                    start, end = fragment.split()
-                    label_fragments.append((label_name, start, end))
-            else:
-                label_fragments = [label.split()]
-            self.raw_labels[component_name] = label_fragments
+            if line.startswith('T'):
+                self.process_component(line)
+            elif line.startswith('R'):
+                self.process_relation(line)
+
+    def process_relation(self, line):
+        label_info = line.split('\t', 2)[1]
+        label, arg1, arg2 = label_info.split(' ')
+        arg1 = arg1.replace('Arg1:', '')
+        arg2 = arg2.replace('Arg2:', '')
+        self.raw_relations.append((arg1, arg2, label))
+
+    def process_component(self, line):
+        component_name, label, _ = line.split('\t', 2)
+        # label has shape label start end;start end; ...
+        if ';' in label:  # The label has several fragments:
+            label_name, indices = label.split(' ', 1)
+            label_fragments = []
+            for fragment in indices.split(';'):
+                start, end = fragment.split()
+                label_fragments.append((label_name, start, end))
+        else:
+            label_fragments = [label.split()]
+        self.raw_labels[component_name] = label_fragments
 
     def build_document(self):
         """Creates a new EssayDocument instance."""
@@ -75,12 +89,16 @@ class EssayDocumentFactory(object):
         content = self.instance_input_file.read()
         document = EssayDocument(self.identifier, title=title)
         document.build_from_text(content, start_index=len(title) + 1)
+        # Add components
         for component, fragments in self.raw_labels.items():
             first_start = fragments[0][1]
             for label, start_index, end_index in fragments:
                 document.add_label_for_position(label, int(start_index),
                                                 int(end_index), component)
             document.add_component(component, int(first_start), int(end_index))
+        # Add relations
+        for arg1, arg2, label in self.raw_relations:
+            document.add_relation(label, arg1, arg2)
         return document
 
 
