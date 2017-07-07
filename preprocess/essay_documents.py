@@ -119,6 +119,10 @@ class EssayDocument(object):
         self.default_label = default_label
         self.title = title
         self.parse_trees = []
+        self.annotated_components = {}
+        self.named_components = {} # Temporal map to store the original names
+        # of the components to read relations later.
+        self.annotated_relations = []
 
     def build_from_text(self, text, start_index=0):
         self.text = text
@@ -136,7 +140,7 @@ class EssayDocument(object):
                 self.sentences.append(sentence)
                 position_in_document += 1
 
-    def add_label_for_position(self, label, start, end):
+    def add_label_for_position(self, label, start, end, component=None):
         """Adds the given label to all words covering range."""
         assert start >= 0 and end <= self.sentences[-1].end_position
         last_start = start
@@ -144,6 +148,10 @@ class EssayDocument(object):
             last_start = sentence.add_label_for_position(label, last_start, end)
             if last_start == end:
                 break
+
+    def add_component(self, name, start, end):
+        self.annotated_components[start] = end
+        self.named_components[name] = start
 
     def parse_text(self, parser):
         for sentence in self.sentences:

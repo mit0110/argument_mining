@@ -31,7 +31,7 @@ class EssayDocumentFactory(object):
         self.input_filename = input_filename
         self.label_input_file = None
         self.instance_input_file = None
-        self.raw_labels = []
+        self.raw_labels = {}
         self.sentences = []
         self.identifier = identifier or input_filename
         self.title = ''
@@ -51,11 +51,11 @@ class EssayDocumentFactory(object):
 
         Saves the resulting labels in self.raw_labels
         """
-        self.raw_labels = []
+        self.raw_labels = {}
         for line in self.label_input_file.readlines():
             if line == '' or not line.startswith('T'):
                 continue
-            label = line.split('\t')[1]
+            component_name, label, _ = line.split('\t', 2)
             # label has shape label start end;start end; ...
             if ';' in label:  # The label has several fragments:
                 label_name, indices = label.split(' ', 1)
@@ -65,7 +65,7 @@ class EssayDocumentFactory(object):
                     label_fragments.append((label_name, start, end))
             else:
                 label_fragments = [label.split()]
-            self.raw_labels.extend(label_fragments)
+            self.raw_labels[component_name] = label_fragments
 
     def build_document(self):
         """Creates a new EssayDocument instance."""
@@ -75,9 +75,12 @@ class EssayDocumentFactory(object):
         content = self.instance_input_file.read()
         document = EssayDocument(self.identifier, title=title)
         document.build_from_text(content, start_index=len(title) + 1)
-        for label, start_index, end_index in self.raw_labels:
-            document.add_label_for_position(label, int(start_index),
-                                            int(end_index))
+        for component, fragments in self.raw_labels.items():
+            first_start = fragments[0][1]
+            for label, start_index, end_index in fragments:
+                document.add_label_for_position(label, int(start_index),
+                                                int(end_index), component)
+            document.add_component(component, int(first_start), int(end_index))
         return document
 
 
