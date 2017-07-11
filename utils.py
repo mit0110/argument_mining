@@ -1,10 +1,8 @@
 """Auxiliary functions."""
 
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
+import pickle
 import docopt
+import os
 import re
 
 
@@ -27,3 +25,9 @@ def read_arguments(doc):
     arguments = {re.sub(r'[-,<,>,]', '', key): value
                  for key, value in raw_arguments.items()}
     return arguments
+
+
+def safe_mkdir(directory_name):
+    """Creates a directory only if it doesn't exists"""
+    if not os.path.exists(directory_name):
+        os.makedirs(directory_name)
