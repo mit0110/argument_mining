@@ -18,7 +18,7 @@ from preprocess import essay_documents, process_arg_essays_for_conll
 ANNOTATIONS_DIR = '/home/milagro/am/third_party/brat-v1.3_Crunchy_Frog/data/'
 ANNOTATORS = {
     'mili': {'dirname': 'judgements-mili'},
-    # 'laura': {'dirname': 'judgements-laura'},
+    'laura': {'dirname': 'judgements-laura'},
     'serena': {'dirname': 'judgements-serena'}
 }
 ANNOTATION_FORMAT = r'.*\.ann'
@@ -69,7 +69,7 @@ def get_annotated_documents():
         annotations = read_annotations(value.items())
         for ann1, ann2 in list(itertools.combinations(annotations.keys(), 2)):
             document_pairs.append((annotations[ann1], annotations[ann2]))
-    return document_pairs
+    return document_pairs, annotations
 
 
 def read_annotations(filenames):
