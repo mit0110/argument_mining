@@ -9,6 +9,7 @@ import lasagne
 import lasagne.nonlinearities as nonlinearities
 import lasagne_nlp.utils.data_processor as data_processor
 import numpy
+import os
 import theano.tensor as T
 import theano
 
@@ -206,8 +207,7 @@ def main():
     lr = learning_rate
     patience = 5
 
-    if output_predict:
-        safe_mkdir('tmp')
+    safe_mkdir('tmp')
     for epoch in range(1, num_epochs + 1):
         logger.info('Epoch %d (learning rate=%.4f, decay rate=%.4f): ' % (
             epoch, lr, decay_rate))
@@ -318,11 +318,11 @@ def main():
 
     # Log last predictions
     # Compile a third function evaluating the final predictions only
-    eval_fn = theano.function([input_var, target_var, mask_var],
-                              [final_prediction])
-    predictions = eval_fn(X_test, Y_test, mask_test)
-    utils.output_predictions(Y_dev, predictions, mask_test,
-                             'tmp/final_test' % epoch, label_alphabet)
+    predict_fn = theano.function([input_var, mask_var],
+                              [final_prediction], allow_input_downcast=True)
+    predictions = predict_fn(X_test, mask_test)[0]
+    utils.output_predictions(predictions, Y_dev, mask_test,
+                             'tmp/final_test', label_alphabet)
 
 
 def log_loss(stage, corr, error, total, logger):

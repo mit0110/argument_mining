@@ -92,3 +92,4 @@ logs/
 
 .idea/
 lasagne_nlp
+experiments/tmp
