@@ -29,6 +29,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.grid_search import RandomizedSearchCV
 
 from sklearn import metrics
+from sklearn_crfsuite import metrics as suite_metrics
 
 
 def main():
@@ -37,7 +38,8 @@ def main():
     documents = utils.pickle_from_file(args['input_filename'])
 
     transformer = conll_feature_extractor.ConllFeatureExtractor(
-        use_structural=True, use_syntactic=True, use_lexical=True)
+        use_structural=True, use_syntactic=True, # use_lexical=True
+    )
     # Extract instances and labels. Each instance is a sentence, represented as
     # a list of feature dictionaries for each work. Labels are represented as
     # a list of word labels.
@@ -58,14 +60,14 @@ def main():
 
         evaluation.log_report(predictions, list(itertools.chain(*y_test)))
     else:
-        label_names = list(classifier.classes_)
-        label_names.remove('O')
+        # label_names = list(classifier.classes_)
+        # label_names.remove('O')
         params_space = {
             'c1': scipy.stats.expon(scale=0.5),
             'c2': scipy.stats.expon(scale=0.05),
         }
-        f1_scorer = metrics.make_scorer(sklearn_crfsuite.metrics.flat_f1_score,
-                                        average='weighted', labels=label_names)
+        f1_scorer = metrics.make_scorer(suite_metrics.flat_f1_score,
+                                        average='weighted')#, labels=label_names)
         # search
         rs = RandomizedSearchCV(
             classifier, params_space, cv=3, verbose=1, n_jobs=-1, n_iter=50,
@@ -73,7 +75,9 @@ def main():
         rs.fit(x_train, y_train)
         print('best params:', rs.best_params_)
         print('best CV score:', rs.best_score_)
-        print('model size: {:0.2f}M'.format(rs.best_estimator_.size_ / 1000000))
+        classifier = rs.best_estimator_
+        predictions = list(itertools.chain(*classifier.predict(x_test)))
+        evaluation.log_report(predictions, list(itertools.chain(*y_test)))
 
 
 if __name__ == '__main__':

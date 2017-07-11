@@ -17,7 +17,7 @@ def split_lexical_node(label):
     For example, 'PP[From/IN]' -> 'PP', 'From', 'IN'
     """
     tag, token_pos = label.split('[')
-    token, pos = token_pos.strip(']').split('/')
+    token, pos = token_pos.strip(']').split('/', 1)
     return tag, token, pos
 
 
