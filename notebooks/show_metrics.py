@@ -5,7 +5,7 @@ import os
 import seaborn as sns
 
 from sklearn import metrics
-from read_annotations import append_path
+from read_annotations import append_path, ANNOTATORS, get_labels
 
 THIRD_PARTY_DIR = '../../third_party/'
 
@@ -50,3 +50,34 @@ def show_confusion_matrix(labels1, labels2, identifier1=None, identifier2=None):
         figure.set(xlabel=identifier2)
     plt.show()
 
+
+def get_annotator(document):
+    return document.identifier.split('-')[1].split(':')[1].strip()
+
+
+def show_general_agreement(document_pairs, process_function=None):
+    seen_annotators = []
+    def get_annotator_index(document):
+        annotator = get_annotator(document)
+        if annotator not in seen_annotators:
+            seen_annotators.append(annotator)
+            return len(seen_annotators) - 1
+        return seen_annotators.index(annotator)
+
+    result = numpy.full((len(ANNOTATORS), len(ANNOTATORS)), numpy.nan)
+    for doc1, doc2 in document_pairs:
+        ann1_index = get_annotator_index(doc1)
+        ann2_index = get_annotator_index(doc2)
+        labels1, labels2 = get_labels(doc1, doc2)
+        if process_function is not None:
+            labels1 = process_function(labels1)
+            labels2 = process_function(labels2)
+        kappa = metrics.cohen_kappa_score(labels1, labels2)
+        # Todo change this to support multiple documents
+        result[ann1_index, ann2_index] = kappa
+        result[ann2_index, ann1_index] = kappa
+    figure = sns.heatmap(result, annot=True, fmt=".2f", linewidths=.5,
+                         vmax=1, xticklabels=seen_annotators,
+                         yticklabels=seen_annotators)
+    sns.plt.title('Cohen\'s Kappa agreement between annotators')
+    plt.show()

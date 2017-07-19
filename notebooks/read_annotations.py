@@ -1,4 +1,4 @@
-"""Functions to read annotations and convert them in EssayDocument instances"""
+"""Functions to read annotations and convert them in AnnotatedDocument instances"""
 
 import itertools
 import os
@@ -13,13 +13,14 @@ def append_path(module_path):
 
 append_path(os.path.abspath('..'))
 
-from preprocess import essay_documents, process_arg_essays_for_conll
+from preprocess import annotated_documents, arg_docs2conll
 
 ANNOTATIONS_DIR = '/home/milagro/am/third_party/brat-v1.3_Crunchy_Frog/data/'
 ANNOTATORS = {
     'mili': {'dirname': 'judgements-mili'},
     'laura': {'dirname': 'judgements-laura'},
-    'serena': {'dirname': 'judgements-serena'}
+    # 'serena': {'dirname': 'judgements-serena'},
+    'cristian': {'dirname': 'judgements-cristian'}
 }
 ANNOTATION_FORMAT = r'.*\.ann'
 BRAT_DIRNAME = '/home/milagro/FaMAF/am/third_party/brat/'
@@ -79,7 +80,7 @@ def read_annotations(filenames):
             os.path.basename(filename[:-4]).replace(
                 'CASE_OF__', '').replace('_', ' '),
             name[0].title())
-        with process_arg_essays_for_conll.EssayDocumentFactory(
+        with arg_docs2conll.AnnotatedDocumentFactory(
                 filename.replace('ann', 'txt'), identifier) as instance_extractor:
             annotations[name] = instance_extractor.build_document()
     return annotations
