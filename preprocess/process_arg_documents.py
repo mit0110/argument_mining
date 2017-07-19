@@ -3,12 +3,12 @@
 The output is a pickled tuple.
 If --raw_text is present, the first element is a 2D numeric matrix, where
 instances are separated by document and by sentence. If --raw_text is not
-present, the first element of the tuple is a list of EssayDocuments.
+present, the first element of the tuple is a list of AnnotatedDocuments.
 The second is a 2D matrix
 with the labels for each sentence.
 
 Usage:
-    process_arg_essays.py --input_dirpath=<dirpath> --output_filename=<filename> [--raw_text] [--limit=<N>]
+    process_arg_documents.py --input_dirpath=<dirpath> --output_filename=<filename> [--raw_text] [--limit=<N>]
 
 Options:
     --input_dirpath=<dirpath>        The path to directory to read files.

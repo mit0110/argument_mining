@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.abspath('../preprocess/'))
 sys.path.insert(0, os.path.abspath('../'))
 
 import utils
-import essay_documents
+import annotated_documents
 from conll_feature_extractor import ConllFeatureExtractor, get_parent_sibling
 from nltk.tree import Tree
 from scipy.sparse import csr_matrix
@@ -39,7 +39,7 @@ class TestConllFeaturesExtractor(unittest.TestCase):
         'and pollution?\n\n')
 
     def setUp(self):
-        self.document = essay_documents.EssayDocument('testDoc',
+        self.document = annotated_documents.AnnotatedDocument('testDoc',
                                                       title=self.ORIGINAL_TITLE)
         self.document.build_from_text(self.DOCUMENT,
                                       start_index=len(self.ORIGINAL_TITLE))

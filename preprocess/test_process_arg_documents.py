@@ -4,7 +4,7 @@ import io
 import unittest
 
 
-import process_arg_essays
+import process_arg_documents
 
 
 class TestFeatureExtractor(unittest.TestCase):
@@ -23,7 +23,7 @@ class TestFeatureExtractor(unittest.TestCase):
         expected_counts['the mat.'] = 1
         expected_counts['the corner.'] = 1
         expected_counts['mat. The'] = 1
-        extractor = process_arg_essays.FeatureExtractor(ngrams_degree=2)
+        extractor = process_arg_documents.FeatureExtractor(ngrams_degree=2)
         self.assertEqual(expected_counts, extractor.count_ngrams(words))
 
 
@@ -91,7 +91,7 @@ class TestLabeledSentencesExtractor(unittest.TestCase):
     ]
 
     def setUp(self):
-        self.extractor = process_arg_essays.LabeledSentencesExtractor('Dummy')
+        self.extractor = process_arg_documents.LabeledSentencesExtractor('Dummy')
         self.extractor.label_input_file = io.StringIO(self.LABELS)
         self.extractor.instance_input_file = io.StringIO(self.DOCUMENT)
 

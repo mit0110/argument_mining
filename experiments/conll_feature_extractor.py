@@ -1,4 +1,4 @@
-"""Functions to convert conll formated EssayDocument into a numeric matrix."""
+"""Functions to convert conll formated AnnotatedDocument into a numeric matrix."""
 
 import itertools
 import numpy
@@ -78,7 +78,7 @@ def get_parent_sibling(parse_tree, start_position):
 
 
 class ConllFeatureExtractor(object):
-    """Converts EssayDocument list into numeric matrix."""
+    """Converts AnnotatedDocument list into numeric matrix."""
 
     def __init__(self, use_structural=True, use_syntactic=False,
                  use_lexical=False):

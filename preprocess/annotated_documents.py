@@ -1,4 +1,4 @@
-"""Abstractions to handle EssayDocuments"""
+"""Abstractions to handle AnnotatedDocuments"""
 from collections import defaultdict
 
 from nltk import pos_tag as pos_tagger
@@ -109,7 +109,7 @@ class Sentence(object):
         return ' '.join(self.words)
 
 
-class EssayDocument(object):
+class AnnotatedDocument(object):
     def __init__(self, identifier, default_label='O', title=''):
         # List of Sentences.
         self.sentences = []

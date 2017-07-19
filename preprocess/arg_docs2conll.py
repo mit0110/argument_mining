@@ -1,9 +1,9 @@
 """Script to preprocess the Argumentative Essays dataset.
 
-The output is a pickled list of EssayDocuments.
+The output is a pickled list of AnnotatedDocuments.
 
 Usage:
-    process_arg_essays_for_conll.py --input_dirpath=<dirpath> --output_file=<file> [--limit=<N>] [--parse_trees]
+    arg_docs2conll.py --input_dirpath=<dirpath> --output_file=<file> [--limit=<N>] [--parse_trees]
 
 Options:
    --input_dirpath=<dirpath>    The path to directory to read files.
@@ -21,12 +21,12 @@ sys.path.insert(0, os.path.abspath('..'))
 
 import utils
 from tqdm import tqdm
-from preprocess.essay_documents import EssayDocument
+from preprocess.annotated_documents import AnnotatedDocument
 from preprocess.lexicalized_stanford_parser import LexicalizedStanfordParser
 
 
-class EssayDocumentFactory(object):
-    """Builds a EssayDocument from input_file."""
+class AnnotatedDocumentFactory(object):
+    """Builds a AnnotatedDocument from input_file."""
     def __init__(self, input_filename, identifier=None):
         self.input_filename = input_filename
         self.label_input_file = None
@@ -82,12 +82,12 @@ class EssayDocumentFactory(object):
         self.raw_labels[component_name] = label_fragments
 
     def build_document(self):
-        """Creates a new EssayDocument instance."""
+        """Creates a new AnnotatedDocument instance."""
         if not len(self.raw_labels):
             self.get_labels()
         title = self.instance_input_file.readline()
         content = self.instance_input_file.read()
-        document = EssayDocument(self.identifier, title=title)
+        document = AnnotatedDocument(self.identifier, title=title)
         document.build_from_text(content, start_index=len(title) + 1)
         # Add components
         for component, fragments in self.raw_labels.items():
@@ -123,11 +123,14 @@ def main():
     documents = []
     filenames = get_input_files(args['input_dirpath'], r'.*txt',
                                 int(args['limit']))
-    parser = LexicalizedStanfordParser(
-        model_path='edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz',
-        encoding='utf8')
+    if args['parse_trees']:
+        parser = LexicalizedStanfordParser(
+            model_path='edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz',
+            encoding='utf8')
+    else:
+        parse = None
     for filename in tqdm(filenames):
-        with EssayDocumentFactory(filename) as instance_extractor:
+        with AnnotatedDocumentFactory(filename) as instance_extractor:
             document = instance_extractor.build_document()
             if args['parse_trees']:
                 document.parse_text(parser)

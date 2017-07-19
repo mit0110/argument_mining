@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 
-"""Test for the EssayDocument class."""
+"""Test for the AnnotatedDocument class."""
 
 import unittest
 
-from essay_documents import EssayDocument
+from annotated_documents import AnnotatedDocument
 
 
-class EssayDocumentTest(unittest.TestCase):
-    """Test for the EssayDocument class."""
+class AnnotatedDocumentTest(unittest.TestCase):
+    """Test for the AnnotatedDocument class."""
 
     def setUp(self):
         self.text = '\n'.join([
@@ -19,7 +19,7 @@ class EssayDocumentTest(unittest.TestCase):
             u'The quick brown fox jumps over them lazy dog .'.split(),
             u'¡Cuántas letras especiales añadidas !'.split()
         ]
-        self.document = EssayDocument('doc0')
+        self.document = AnnotatedDocument('doc0')
         self.document.build_from_text(self.text)
 
     def test_build_from_text(self):
@@ -43,7 +43,7 @@ class EssayDocumentTest(unittest.TestCase):
 
     def test_get_word_with_start(self):
         """Test the get_word_for_position function with a start index."""
-        self.document = EssayDocument('doc0')
+        self.document = AnnotatedDocument('doc0')
         self.document.build_from_text(self.text, start_index=10)
         for raw_sentence, sentence in zip(self.raw_sentences,
                                           self.document.sentences):
