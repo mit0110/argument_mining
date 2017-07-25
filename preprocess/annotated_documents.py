@@ -38,16 +38,16 @@ class Sentence(object):
         last_position = 0
         for word, pos in pos_tags:
             word_position = text[last_position:].find(word) + last_position
-            if word_position < 0:
+            if word_position < last_position:
                 if word == u'``':
                     word_position = text[last_position:].find(
                         '"') + last_position
                 else:
                     raise IndexError('Word {} not in sentence {}'.format(
                         word, text))
-            last_position = word_position
-            self.add_word(word, pos, last_position + initial_position,
+            self.add_word(word, pos, word_position + initial_position,
                           self.default_label)
+            last_position = word_position + len(word)
 
     @property
     def start_position(self):
@@ -140,7 +140,7 @@ class AnnotatedDocument(object):
                 self.sentences.append(sentence)
                 position_in_document += 1
 
-    def add_label_for_position(self, label, start, end, component=None):
+    def add_label_for_position(self, label, start, end):
         """Adds the given label to all words covering range."""
         assert start >= 0 and end <= self.sentences[-1].end_position
         last_start = start

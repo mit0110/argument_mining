@@ -86,15 +86,15 @@ class AnnotatedDocumentFactory(object):
         if not len(self.raw_labels):
             self.get_labels()
         title = self.instance_input_file.readline()
-        content = self.instance_input_file.read()
+        content = title + self.instance_input_file.read()
         document = AnnotatedDocument(self.identifier, title=title)
-        document.build_from_text(content, start_index=len(title) + 1)
+        document.build_from_text(content, start_index=0)
         # Add components
         for component, fragments in self.raw_labels.items():
             first_start = fragments[0][1]
             for label, start_index, end_index in fragments:
                 document.add_label_for_position(label, int(start_index),
-                                                int(end_index), component)
+                                                int(end_index))
             document.add_component(component, int(first_start), int(end_index))
         # Add relations
         for arg1, arg2, label in self.raw_relations:
