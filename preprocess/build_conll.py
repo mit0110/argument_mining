@@ -37,30 +37,46 @@ class DocumentWriter(object):
 
     def write_document(self, document):
         self.token_index = 0
-        current_relation = None
-        previous_label = document.default_label
         # Map from component start in document level to line index in conll
         component_starts = {}
+        relations = document.get_relative_relations()
+        last_component_start = 0
         for sentence in document.sentences:
             for word_index, word in enumerate(sentence.words):
-                component_label = sentence.labels[word_index]
-                if component_label == document.default_label:
-                    self.write_line(word, component_label)
-                else:
-                    bio_label = 'I-'
+                relation = None
+                target_index = None
+                label = sentence.labels[word_index]
+                bio_label = 'O'
+                if label != document.default_label:
+                    bio_label = 'I'
                     word_start = sentence.word_positions[word_index]
                     if self.is_begin(word_start, document, word):
                         # Start of a new component
-                        bio_label = 'B-'
+                        bio_label = 'B'
+                        last_component_start = word_start
                         component_starts[word_start] = self.token_index
-                        # TODO Search for the relations originating in this
-                        # component
-                    self.write_line(word, bio_label + component_label)
-                previous_label = component_label
+                    relation, target_index = self._get_relations(
+                        last_component_start, relations)
+                self._write_line(word, bio_label, label, relation, target_index)
 
-    def write_line(self, word, label):
-        self.output_file.write('{}\t{}\t{}\n'.format(
-            self.token_index, word, label))
+    def _get_relations(self, component_start, relations):
+        target_dict = relations.get(component_start, None)
+        if target_dict is None:
+            return None, None
+        if len(target_dict) == 1:
+            return list(target_dict.items())[0]
+        for target, relation in target_dict.items():
+            if relation in ['Attack', 'Support']:
+                return target, relation
+
+    def _write_line(self, word, bio_label, label, relation, target_index):
+        if bio_label == 'O':
+            self.output_file.write('{}\t{}\t{}\n'.format(
+                self.token_index, word, bio_label))
+        else:
+            self.output_file.write('{}\t{}\t{}-{}:{}:{}\n'.format(
+                self.token_index, word, bio_label, label,
+                relation, target_index))
         self.token_index += 1
 
 

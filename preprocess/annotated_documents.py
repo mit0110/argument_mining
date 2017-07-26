@@ -158,6 +158,19 @@ class AnnotatedDocument(object):
         start2 = self.named_components[arg2]
         self.annotated_relations[start1][start2] = label
 
+    def get_relative_relations(self):
+        """Returns self.annotated_relations in relative values"""
+        result = defaultdict(dict)
+        starts = sorted(self.annotated_components.keys())
+        for start1, relation_dict in self.annotated_relations.items():
+            for start2, label in relation_dict.items():
+                index_start1 = starts.index(start1)
+                index_start2 = starts.index(start2)
+                relative_start2 = index_start2 - index_start1
+                assert relative_start2 != 0
+                result[start1][relative_start2] = label
+        return result
+
     def parse_text(self, parser):
         for sentence in self.sentences:
             self.parse_trees.append(next(parser.parse(sentence.words)))
