@@ -87,5 +87,5 @@ def show_general_agreement(document_pairs, process_function=None):
     figure = sns.heatmap(result, annot=True, fmt=".2f", linewidths=.5,
                          vmax=1, xticklabels=seen_annotators,
                          yticklabels=seen_annotators)
-    sns.plt.title('Cohen\'s Kappa agreement between annotators')
+    plt.title('Cohen\'s Kappa agreement between annotators')
     plt.show()
