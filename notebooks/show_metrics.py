@@ -9,11 +9,14 @@ from read_annotations import append_path, ANNOTATORS, get_labels
 
 THIRD_PARTY_DIR = '../../third_party/'
 
-
-append_path(THIRD_PARTY_DIR)
-append_path(os.path.join(THIRD_PARTY_DIR, 'krippendorff-alpha'))
-import fleiss_kappa
-from krippendorff_alpha import krippendorff_alpha, nominal_metric
+try:
+    append_path(THIRD_PARTY_DIR)
+    append_path(os.path.join(THIRD_PARTY_DIR, 'krippendorff-alpha'))
+    import fleiss_kappa
+    from krippendorff_alpha import krippendorff_alpha, nominal_metric
+except:
+    fleiss_kappa = None
+    krippendorff_alpha = None
 
 
 def show_kappa(labels1, labels2, identifier1, identifier2):
@@ -24,18 +27,23 @@ def show_kappa(labels1, labels2, identifier1, identifier2):
 
 
 def show_krippendorff_alpha(labels):
-    alpha = krippendorff_alpha(labels, metric=nominal_metric,
-                               convert_items=lambda x:x, missing_items=[])
-    print('Krippendorff Alpha: {}'.format(alpha))
+    if krippendorff_alpha is not None:
+        alpha = krippendorff_alpha(labels, metric=nominal_metric,
+                                   convert_items=lambda x:x, missing_items=[])
+        print('Krippendorff Alpha: {}'.format(alpha))
+    else:
+        print('No module Krippendorff Alpha')
 
 
 def show_fleiss_kappa(labels):
-    input = []
-    for label in labels:
-        input.append(numpy.unique(label, return_counts=True)[1])
-    kappa = fleiss_kappa.fleiss_kappa(numpy.array(input))
-    print('Fleiss Kappa: {}'.format(kappa))
-
+    if fleiss_kappa is not None:
+        input = []
+        for label in labels:
+            input.append(numpy.unique(label, return_counts=True)[1])
+        kappa = fleiss_kappa.fleiss_kappa(numpy.array(input))
+        print('Fleiss Kappa: {}'.format(kappa))
+    else:
+        print('No module Fleiss Kappa')
 
 def show_confusion_matrix(labels1, labels2, identifier1=None, identifier2=None):
     label_names = sorted(list(set(labels1)))
