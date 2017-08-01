@@ -5,7 +5,7 @@ import os
 import seaborn as sns
 
 from sklearn import metrics
-from read_annotations import append_path, ANNOTATORS, get_labels
+from read_annotations import append_path, get_labels
 
 THIRD_PARTY_DIR = '../../third_party/'
 
@@ -63,7 +63,7 @@ def get_annotator(document):
     return document.identifier.split('-')[1].split(':')[1].strip()
 
 
-def show_general_agreement(document_pairs, process_function=None):
+def show_general_agreement(document_pairs, process_function=None, annotators=2):
     seen_annotators = []
     def get_annotator_index(document):
         annotator = get_annotator(document)
@@ -72,7 +72,7 @@ def show_general_agreement(document_pairs, process_function=None):
             return len(seen_annotators) - 1
         return seen_annotators.index(annotator)
 
-    result = numpy.full((len(ANNOTATORS), len(ANNOTATORS)), numpy.nan)
+    result = numpy.full((annotators, annotators), numpy.nan)
     for doc1, doc2 in document_pairs:
         ann1_index = get_annotator_index(doc1)
         ann2_index = get_annotator_index(doc2)

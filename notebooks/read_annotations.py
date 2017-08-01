@@ -15,15 +15,8 @@ append_path(os.path.abspath('..'))
 
 from preprocess import annotated_documents, arg_docs2conll
 
-ANNOTATIONS_DIR = '/home/milagro/am/third_party/brat-v1.3_Crunchy_Frog/data/'
-ANNOTATORS = {
-    'mili': {'dirname': 'judgements-mili'},
-    'laura': {'dirname': 'judgements-laura'},
-    # 'serena': {'dirname': 'judgements-serena'},
-    'cristian': {'dirname': 'judgements-cristian'}
-}
+
 ANNOTATION_FORMAT = r'.*\.ann'
-BRAT_DIRNAME = '/home/milagro/FaMAF/am/third_party/brat/'
 
 
 # Find files to compare
@@ -40,29 +33,29 @@ def get_non_empty_filenames(input_dirpath, pattern, size_limit=500):
     return result
 
 
-def get_filenames_by_document():
+def get_filenames_by_document(annotations_dir, annotators):
     files = defaultdict(lambda: {})
-    for name, annotator in ANNOTATORS.items():
+    for name, annotator in annotators.items():
         annotator['files'] = get_non_empty_filenames(
-            os.path.join(ANNOTATIONS_DIR, annotator['dirname']),
+            os.path.join(annotations_dir, annotator['dirname']),
             ANNOTATION_FORMAT)
         for filename, filepath in annotator['files'].items():
             files[filename][name] = filepath
     return dict(files)
 
 
-def get_filenames_by_annotator():
+def get_filenames_by_annotator(annotations_dir, annotators):
     filenames = defaultdict(list)
-    for name, annotator in ANNOTATORS.items():
+    for name, annotator in annotators.items():
         for filename in get_non_empty_filenames(
-                os.path.join(ANNOTATIONS_DIR, annotator['dirname']),
+                os.path.join(annotations_dir, annotator['dirname']),
                 ANNOTATION_FORMAT).values():
             filenames[name].append(filename)
     return dict(filenames)
 
 
-def get_annotated_documents():
-    files = get_filenames_by_document()
+def get_annotated_documents(annotations_dir, annotators):
+    files = get_filenames_by_document(annotations_dir, annotators)
     document_pairs = []
     for value in files.values():
         if len(value) < 2:
