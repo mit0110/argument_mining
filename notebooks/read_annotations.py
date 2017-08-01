@@ -52,13 +52,13 @@ def get_filenames_by_annotator():
 
 
 def get_filenames():
-    filenames = {}
+    filenames = defaultdict(list)
     for name, annotator in ANNOTATORS.items():
         for filename in get_non_empty_filenames(
                 os.path.join(ANNOTATIONS_DIR, annotator['dirname']),
                 ANNOTATION_FORMAT).values():
-            filenames[name] = filename
-    return filenames
+            filenames[name].append(filename)
+    return dict(filenames)
 
 
 def get_annotated_documents():
@@ -73,17 +73,19 @@ def get_annotated_documents():
     return document_pairs, annotations
 
 
-def read_annotations(filenames):
-    annotations = {}
-    for name, filename in filenames:
-        identifier = 'Case: {} - Ann: {}'.format(
-            os.path.basename(filename[:-4]).replace(
-                'CASE_OF__', '').replace('_', ' '),
-            name[0].title())
-        with arg_docs2conll.AnnotatedDocumentFactory(
-                filename.replace('ann', 'txt'), identifier) as instance_extractor:
-            annotations[name] = instance_extractor.build_document()
-    return annotations
+def read_annotations(annotator_filenames):
+    annotations = defaultdict(list)
+    for name, filenames in annotator_filenames:
+        for filename in filenames:
+            identifier = 'Case: {} - Ann: {}'.format(
+                os.path.basename(filename[:-4]).replace(
+                    'CASE_OF__', '').replace('_', ' '),
+                name[0].title())
+            txt_filename = filename.replace('ann', 'txt')
+            with arg_docs2conll.AnnotatedDocumentFactory(
+                    txt_filename, identifier) as instance_extractor:
+                annotations[name].append(instance_extractor.build_document())
+    return dict(annotations)
 
 
 def get_labels(doc1, doc2):
