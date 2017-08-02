@@ -50,8 +50,10 @@ def show_confusion_matrix(labels1, labels2, identifier1=None, identifier2=None):
     matrix = metrics.confusion_matrix(labels1, labels2, labels=label_names)
     observed_agreement = numpy.trace(matrix) / float(numpy.sum(matrix)) * 100
     print('Observed Agreement: {0:.2f}%'.format(observed_agreement))
+    colormap = plt.cm.cubehelix_r
     figure = sns.heatmap(matrix, annot=True, fmt="d", linewidths=.5,
-                         xticklabels=label_names, yticklabels=label_names)
+                         xticklabels=label_names, yticklabels=label_names,
+                         cmap=sns.cubehelix_palette(8))
     if identifier1 is not None:
         figure.set(ylabel=identifier1)
     if identifier2 is not None:

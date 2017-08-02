@@ -93,3 +93,6 @@ logs/
 .idea/
 lasagne_nlp
 experiments/tmp
+
+*.nbconvert.ipynb
+*.nbconvert.html

@@ -1,8 +1,8 @@
 """Abstractions to handle AnnotatedDocuments"""
 from collections import defaultdict
-
 from nltk import pos_tag as pos_tagger
 from nltk.tokenize import sent_tokenize, word_tokenize
+from termcolor import colored
 
 
 class Sentence(object):
@@ -93,13 +93,22 @@ class Sentence(object):
 
     def pretty_print(self, styles=None):
         if styles is None:
-            styles = defaultdict(lambda: '**')  # boldtext
+            styles = defaultdict(lambda: 'blue')
         result = ''
+        previous_label = self.default_label
         for word, label in zip(self.words, self.labels):
+            if label != previous_label:
+                if label != self.default_label:  # new block
+                    result += '{'
+                else:  # end of block
+                    result += '}'
             if label == self.default_label:
                 result += word + ' '
             else:
-                result += styles[label] + word + styles[label] + ' '
+                result += colored(word, styles[label]) + ' '
+            previous_label = label
+        if previous_label != self.default_label:
+            result += '}'
         return result
 
     def __len__(self):
