@@ -53,7 +53,7 @@ def show_confusion_matrix(labels1, labels2, identifier1=None, identifier2=None):
     colormap = plt.cm.cubehelix_r
     figure = sns.heatmap(matrix, annot=True, fmt="d", linewidths=.5,
                          xticklabels=label_names, yticklabels=label_names,
-                         cmap=sns.cubehelix_palette(8))
+                         cmap=sns.cubehelix_palette(8,  as_cmap=True))
     if identifier1 is not None:
         figure.set(ylabel=identifier1)
     if identifier2 is not None:
