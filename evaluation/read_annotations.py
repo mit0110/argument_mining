@@ -54,19 +54,21 @@ def get_filenames_by_annotator(annotations_dir, annotators):
     return dict(filenames)
 
 
-def get_annotated_documents(annotations_dir, annotators):
+def get_annotated_documents(annotations_dir, annotators,
+                            factory=arg_docs2conll.AnnotatedDocumentFactory):
     files = get_filenames_by_document(annotations_dir, annotators)
     document_pairs = []
     for value in files.values():
         if len(value) < 2:
             continue
-        annotations = read_parallel_annotations(value.items())
+        annotations = read_parallel_annotations(value.items(), factory)
         for ann1, ann2 in list(itertools.combinations(annotations.keys(), 2)):
             document_pairs.append((annotations[ann1], annotations[ann2]))
     return document_pairs, annotations
 
 
-def read_parallel_annotations(annotator_filenames):
+def read_parallel_annotations(annotator_filenames,
+                              factory=arg_docs2conll.AnnotatedDocumentFactory):
     annotations = {}
     for name, filename in annotator_filenames:
         identifier = 'Case: {} - Ann: {}'.format(
@@ -74,8 +76,7 @@ def read_parallel_annotations(annotator_filenames):
                 'CASE_OF__', '').replace('_', ' '),
             name[0].title())
         txt_filename = filename.replace('.ann', '.txt')
-        with arg_docs2conll.AnnotatedDocumentFactory(
-                txt_filename, identifier) as instance_extractor:
+        with factory(txt_filename, identifier) as instance_extractor:
             annotations[name] = instance_extractor.build_document()
     return annotations
 

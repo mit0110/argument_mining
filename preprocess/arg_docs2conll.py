@@ -21,12 +21,15 @@ sys.path.insert(0, os.path.abspath('..'))
 
 import utils
 from tqdm import tqdm
-from preprocess.annotated_documents import AnnotatedDocument
+from preprocess.annotated_documents import AnnotatedDocument, AnnotatedJudgement
 from preprocess.lexicalized_stanford_parser import LexicalizedStanfordParser
 
 
 class AnnotatedDocumentFactory(object):
     """Builds a AnnotatedDocument from input_file."""
+
+    DOCUMENT_CLASS = AnnotatedDocument
+
     def __init__(self, input_filename, identifier=None):
         self.input_filename = input_filename
         self.label_input_file = None
@@ -87,7 +90,7 @@ class AnnotatedDocumentFactory(object):
             self.get_labels()
         title = self.instance_input_file.readline()
         content = title + self.instance_input_file.read()
-        document = AnnotatedDocument(self.identifier, title=title)
+        document = self.DOCUMENT_CLASS(self.identifier, title=title)
         document.build_from_text(content, start_index=0)
         # Add components
         for component, fragments in self.raw_labels.items():
@@ -100,6 +103,11 @@ class AnnotatedDocumentFactory(object):
         for arg1, arg2, label in self.raw_relations:
             document.add_relation(label, arg1, arg2)
         return document
+
+
+class AnnotatedJudgementFactory(AnnotatedDocumentFactory):
+
+    DOCUMENT_CLASS = AnnotatedJudgement
 
 
 def get_input_files(input_dirpath, pattern, limit=-1):
