@@ -1,4 +1,6 @@
 """Abstractions to handle AnnotatedDocuments"""
+import re
+
 from collections import defaultdict
 from nltk import pos_tag as pos_tagger
 from nltk.tokenize import sent_tokenize, word_tokenize
@@ -201,3 +203,43 @@ class AnnotatedDocument(object):
         labels = [l for sentence in self.sentences for l in sentence.labels]
         return words, labels
 
+
+class AnnotatedJudgement(AnnotatedDocument):
+    """Represents annotated judgements, separating the different sections."""
+
+    SECTION_REGEX = re.compile('^[A|B|C|D|III|II|I|IV]\.\s*(.{,50})$')
+
+    def build_from_text(self, text, start_index=0):
+        self.text = text
+        current_section = 'Introduction'
+        paragraphs = self.text.split('\n')
+        position_in_document = 0
+        for paragraph_index, paragraph in enumerate(paragraphs):
+            raw_sentences = sent_tokenize(paragraph)
+            index = 0
+            previous_sentence = ''
+            for raw_sentence in raw_sentences:
+                # Fix the tokenization for line numbers
+                if len(raw_sentence) < 4:
+                    previous_sentence = raw_sentence
+                    continue
+                if previous_sentence != '':
+                    initial_position = self.text.find(
+                        previous_sentence) + start_index
+                    raw_sentence = previous_sentence + ' ' + raw_sentence
+                    previous_sentence = ''
+                else:
+                    initial_position = self.text.find(
+                        raw_sentence) + start_index
+                assert initial_position >= 0
+                candidate_section = self.SECTION_REGEX.search(raw_sentence)
+                if candidate_section is not None:
+                    current_section = candidate_section.group(1).strip()
+                sentence = Sentence(position_in_document=position_in_document,
+                                    paragraph_number=paragraph_index,
+                                    position_in_paragraph=index)
+                sentence.section = current_section
+                sentence.build_from_text(raw_sentence, initial_position)
+                self.sentences.append(sentence)
+                position_in_document += 1
+                index += 1
