@@ -163,8 +163,8 @@ class AnnotatedDocument(object):
         self.named_components[name] = start
 
     def add_relation(self, label, arg1, arg2):
-        start1 = self.named_components[arg1]
-        start2 = self.named_components[arg2]
+        start1 = self.named_components[arg1.strip()]
+        start2 = self.named_components[arg2.strip()]
         self.annotated_relations[start1][start2] = label
 
     def get_relative_relations(self):
