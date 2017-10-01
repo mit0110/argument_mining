@@ -60,7 +60,7 @@ def get_annotation(filename, annotator_name):
             'CASE_OF__', '').replace('_', ' '),
         annotator_name[0].title())
     txt_filename = filename.replace('.ann', '.txt')
-    with arg_docs2conll.AnnotatedDocumentFactory(
+    with arg_docs2conll.AnnotatedJudgementFactory(
             txt_filename, identifier) as instance_extractor:
         try:
             document = instance_extractor.build_document()
