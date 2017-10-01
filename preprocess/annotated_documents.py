@@ -20,6 +20,7 @@ class Sentence(object):
         self.word_positions = []
         self.pos = []
         self.labels = []
+        self.attributes = []
         self.tree = None
         self.default_label = default_label
         # A map from start positions (in document) to word index in self.words
@@ -31,6 +32,7 @@ class Sentence(object):
         self.words.append(word)
         self.pos.append(pos)
         self.labels.append(label)
+        self.attributes.append(None)
         self.word_positions.append(position)
         self.word_index[position] = len(self.words) - 1
 
@@ -66,7 +68,7 @@ class Sentence(object):
     def get_word_for_position(self, position):
         return self.word_index.get(position, -1)
 
-    def add_label_for_position(self, label, start, end):
+    def add_label_for_position(self, label, start, end, attribute=None):
         """Adds label to words with positions between start and end (including).
 
         Returns the last position of char_range used. If char_range doesn't
@@ -79,6 +81,8 @@ class Sentence(object):
                 start += 1
                 continue
             self.labels[word_index] = label
+            if attribute is not None:
+                self.attributes[word_index] = attribute
             start += len(self.words[word_index])
         return start
 
@@ -151,12 +155,13 @@ class AnnotatedDocument(object):
                 self.sentences.append(sentence)
                 position_in_document += 1
 
-    def add_label_for_position(self, label, start, end):
+    def add_label_for_position(self, label, start, end, attribute=None):
         """Adds the given label to all words covering range."""
         assert start >= 0 and end <= self.sentences[-1].end_position
         last_start = start
         for sentence in self.sentences:
-            last_start = sentence.add_label_for_position(label, last_start, end)
+            last_start = sentence.add_label_for_position(
+                label, last_start, end, attribute=attribute)
             if last_start == end:
                 break
 
