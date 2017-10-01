@@ -36,7 +36,7 @@ class DocumentWriter(object):
         self.document = None
 
     @staticmethod
-    def is_begin(word_start, document, word):
+    def is_begin(word_start, document):
         """Returns True if the word is the start of a component."""
         return word_start in document.annotated_components
 
@@ -44,9 +44,12 @@ class DocumentWriter(object):
         self.token_index = 0
         # Map from component start in document level to line index in conll
         self.relations = document.get_relative_relations()
+        self.component_starts = {}
+        self.last_component_start = 0
         self.document = document
         for sentence in document.sentences:
             self._write_sentence(sentence)
+        self.end_section()
 
     def _write_sentence(self, sentence):
         for word_index, word in enumerate(sentence.words):
@@ -57,7 +60,7 @@ class DocumentWriter(object):
             if label != self.document.default_label:
                 bio_label = 'I'
                 word_start = sentence.word_positions[word_index]
-                if self.is_begin(word_start, self.document, word):
+                if self.is_begin(word_start, self.document):
                     # Start of a new component
                     bio_label = 'B'
                     self.last_component_start = word_start
@@ -91,6 +94,9 @@ class DocumentWriter(object):
                 relation, target_index))
         self.token_index += 1
 
+    def end_section(self):
+        self.output_file.write('\n')
+
 
 def main():
     """Main function of script"""
@@ -101,7 +107,9 @@ def main():
                                 include_relations=args['include_relations'])
         for document in documents:
             if document.has_annotation():
+                print('Adding document {}'.format(document.identifier))
                 writer.write_document(document)
+
 
 
 if __name__ == '__main__':
