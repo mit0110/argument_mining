@@ -6,7 +6,7 @@ index   token    [BI]-[entity label]:[related entity's index]:[relation label]
 
 
 Usage:
-    build_conll.py --input_filename=<filename> --output_filename=<filename> [--include_relations]
+    build_conll.py --input_filename=<filename> --output_filename=<filename> [--include_relations] [--separation=<separation>]
 
 Options:
     --input_filename <filename>     The path to pickled file contianing the
@@ -14,6 +14,8 @@ Options:
     --output_filename <filename>    The path to the conll file to store the
                                     output
     --include_relations             Weather to include relations in the label or not.
+    --separation <separation>       The separation level. Options are sentence,
+                                    paragraph or section. Default is sentence.
 
 """
 from __future__ import print_function
@@ -26,7 +28,7 @@ import utils
 
 
 class DocumentWriter(object):
-    def __init__(self, output_file, include_relations=True):
+    def __init__(self, output_file, include_relations=True, separation=None):
         self.output_file = output_file
         self.token_index = 0
         self.include_relations = include_relations
@@ -34,6 +36,9 @@ class DocumentWriter(object):
         self.component_starts = {}
         self.last_component_start = 0
         self.document = None
+        self.separation = separation
+        self.current_paragraph = None
+        self.current_section = None
 
     @staticmethod
     def is_begin(word_start, document):
@@ -47,9 +52,22 @@ class DocumentWriter(object):
         self.component_starts = {}
         self.last_component_start = 0
         self.document = document
+        self.current_paragraph = None
+        self.current_section = None
         for sentence in document.sentences:
+            if (self.separation == 'paragraph'
+                  and sentence.paragraph_number != self.current_paragraph):
+                self.current_paragraph = sentence.paragraph_number
+                self.end_section()
+            elif (self.separation == 'section'
+                  and sentence.section != self.current_section):
+                self.current_section = sentence.section
+                self.end_section()
             self._write_sentence(sentence)
+            if self.separation == 'sentence':
+                self.end_section()
         self.end_section()
+
 
     def _write_sentence(self, sentence):
         for word_index, word in enumerate(sentence.words):
@@ -102,9 +120,14 @@ def main():
     """Main function of script"""
     args = utils.read_arguments(__doc__)
     documents = utils.pickle_from_file(args['input_filename'])
+    if args['separation'] in ['sentence', 'paragraph', 'section']:
+        separation = args['separation']
+    else:
+        separation = 'sentence'
     with open(args['output_filename'], 'w') as output_file:
         writer = DocumentWriter(output_file,
-                                include_relations=args['include_relations'])
+                                include_relations=args['include_relations'],
+                                separation=separation)
         for document in documents:
             if document.has_annotation():
                 print('Adding document {}'.format(document.identifier))
