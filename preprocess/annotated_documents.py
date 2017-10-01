@@ -203,6 +203,13 @@ class AnnotatedDocument(object):
         labels = [l for sentence in self.sentences for l in sentence.labels]
         return words, labels
 
+    def has_annotation(self):
+        """Returns True if the document has any non default label"""
+        for sentence in self.sentences:
+            if sentence.has_label:
+                return True
+        return False
+
 
 class AnnotatedJudgement(AnnotatedDocument):
     """Represents annotated judgements, separating the different sections."""
