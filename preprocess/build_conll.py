@@ -83,13 +83,13 @@ class DocumentWriter(object):
 
     def _write_line(self, word, bio_label, label, relation, target_index):
         if bio_label == 'O':
-            self.output_file.write('{}\t{}\t{}\n'.format(
+            self.output_file.write('{}\t{}\t_\t_\t{}\n'.format(
                 self.token_index, word, bio_label))
         elif not self.include_relations:
-            self.output_file.write('{}\t{}\t{}-{}\n'.format(
+            self.output_file.write('{}\t{}\t_\t_\t{}-{}\n'.format(
                 self.token_index, word, bio_label, label))
         else:
-            self.output_file.write('{}\t{}\t{}-{}:{}:{}\n'.format(
+            self.output_file.write('{}\t{}\t_\t_\t{}-{}:{}:{}\n'.format(
                 self.token_index, word, bio_label, label,
                 relation, target_index))
         self.token_index += 1
