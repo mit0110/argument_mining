@@ -54,30 +54,47 @@ def get_filenames_by_annotator(annotations_dir, annotators):
     return dict(filenames)
 
 
-def get_annotated_documents(annotations_dir, annotators,
-                            factory=arg_docs2conll.AnnotatedDocumentFactory):
+def get_annotation(filename, annotator_name):
+    identifier = 'Case: {} - Ann: {}'.format(
+        os.path.basename(filename[:-4]).replace(
+            'CASE_OF__', '').replace('_', ' '),
+        annotator_name[0].title())
+    txt_filename = filename.replace('.ann', '.txt')
+    with arg_docs2conll.AnnotatedJudgementFactory(
+            txt_filename, identifier) as instance_extractor:
+        try:
+            document = instance_extractor.build_document()
+        except Exception as exc:
+            print('Error processing document {}'.format(filename))
+            raise exc
+    return document
+
+
+def get_all_documents(annotations_dir, annotators):
+    filenames = get_filenames_by_annotator(annotations_dir, annotators)
+    documents = defaultdict(list)
+    for annotator, annotator_filenames in filenames.items():
+        for filename in annotator_filenames:
+            documents[annotator].append(get_annotation(filename, annotator))
+    return documents
+
+
+def get_annotated_documents(annotations_dir, annotators):
     files = get_filenames_by_document(annotations_dir, annotators)
     document_pairs = []
     for value in files.values():
         if len(value) < 2:
             continue
-        annotations = read_parallel_annotations(value.items(), factory)
+        annotations = read_parallel_annotations(value.items())
         for ann1, ann2 in list(itertools.combinations(annotations.keys(), 2)):
             document_pairs.append((annotations[ann1], annotations[ann2]))
     return document_pairs, annotations
 
 
-def read_parallel_annotations(annotator_filenames,
-                              factory=arg_docs2conll.AnnotatedDocumentFactory):
+def read_parallel_annotations(annotator_filenames):
     annotations = {}
     for name, filename in annotator_filenames:
-        identifier = 'Case: {} - Ann: {}'.format(
-            os.path.basename(filename[:-4]).replace(
-                'CASE_OF__', '').replace('_', ' '),
-            name[0].title())
-        txt_filename = filename.replace('.ann', '.txt')
-        with factory(txt_filename, identifier) as instance_extractor:
-            annotations[name] = instance_extractor.build_document()
+        annotations[name] = get_annotation(filename, name) 
     return annotations
 
 

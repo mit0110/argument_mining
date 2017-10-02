@@ -20,6 +20,7 @@ class Sentence(object):
         self.word_positions = []
         self.pos = []
         self.labels = []
+        self.attributes = []
         self.tree = None
         self.default_label = default_label
         # A map from start positions (in document) to word index in self.words
@@ -31,6 +32,7 @@ class Sentence(object):
         self.words.append(word)
         self.pos.append(pos)
         self.labels.append(label)
+        self.attributes.append(None)
         self.word_positions.append(position)
         self.word_index[position] = len(self.words) - 1
 
@@ -66,7 +68,7 @@ class Sentence(object):
     def get_word_for_position(self, position):
         return self.word_index.get(position, -1)
 
-    def add_label_for_position(self, label, start, end):
+    def add_label_for_position(self, label, start, end, attribute=None):
         """Adds label to words with positions between start and end (including).
 
         Returns the last position of char_range used. If char_range doesn't
@@ -79,6 +81,8 @@ class Sentence(object):
                 start += 1
                 continue
             self.labels[word_index] = label
+            if attribute is not None:
+                self.attributes[word_index] = attribute
             start += len(self.words[word_index])
         return start
 
@@ -168,12 +172,13 @@ class AnnotatedDocument(UnlabeledDocument):
         # of the components to read relations later.
         self.annotated_relations = defaultdict(dict)
 
-    def add_label_for_position(self, label, start, end):
+    def add_label_for_position(self, label, start, end, attribute=None):
         """Adds the given label to all words covering range."""
         assert start >= 0 and end <= self.sentences[-1].end_position
         last_start = start
         for sentence in self.sentences:
-            last_start = sentence.add_label_for_position(label, last_start, end)
+            last_start = sentence.add_label_for_position(
+                label, last_start, end, attribute=attribute)
             if last_start == end:
                 break
 
@@ -182,8 +187,8 @@ class AnnotatedDocument(UnlabeledDocument):
         self.named_components[name] = start
 
     def add_relation(self, label, arg1, arg2):
-        start1 = self.named_components[arg1]
-        start2 = self.named_components[arg2]
+        start1 = self.named_components[arg1.strip()]
+        start2 = self.named_components[arg2.strip()]
         self.annotated_relations[start1][start2] = label
 
     def get_relative_relations(self):
@@ -212,6 +217,13 @@ class AnnotatedDocument(UnlabeledDocument):
         words = [w for sentence in self.sentences for w in sentence.words]
         labels = [l for sentence in self.sentences for l in sentence.labels]
         return words, labels
+
+    def has_annotation(self):
+        """Returns True if the document has any non default label"""
+        for sentence in self.sentences:
+            if sentence.has_label:
+                return True
+        return False
 
 
 class AnnotatedJudgement(AnnotatedDocument):
