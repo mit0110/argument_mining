@@ -2,6 +2,7 @@
 
 from nltk.parse.stanford import StanfordParser
 
+
 class LexicalizedStanfordParser(StanfordParser):
     """Wrapper class for StanfordParser with lexicalized output."""
 

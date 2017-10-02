@@ -21,7 +21,7 @@ sys.path.insert(0, os.path.abspath('..'))
 
 import utils
 from tqdm import tqdm
-from preprocess.annotated_documents import AnnotatedDocument, AnnotatedJudgement
+from preprocess.documents import AnnotatedDocument, AnnotatedJudgement
 from preprocess.lexicalized_stanford_parser import LexicalizedStanfordParser
 
 
