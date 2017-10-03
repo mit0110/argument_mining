@@ -15,6 +15,7 @@ Options:
 
 import os
 import sys
+import tqdm
 sys.path.insert(0, os.path.abspath('..'))
 
 import utils
@@ -24,7 +25,7 @@ from preprocess.lexicalized_stanford_parser import LexicalizedStanfordParser
 
 
 def _is_new_document(line):
-    return line.startsWith('CASE OF  ')
+    return line.startswith('CASE OF  ')
 
 
 def _create_document(text_buffer, parser=None):
@@ -48,16 +49,18 @@ def main():
         parser = None
 
     with open(args['input_file'], 'r') as input_file:
-        for line in input_file.readline():
+        for line in tqdm.tqdm(input_file):
             if _is_new_document(line) and len(text_buffer) > 0:
                 documents.append(_create_document(text_buffer, parser))
-                text_buffer = []
+                text_buffer = [line]
             else:
                 text_buffer.append(line)
     if len(text_buffer) > 0:
-        documents.append(create_document(text_buffer, parser))
+        documents.append(_create_document(text_buffer, parser))
+    print('{} documents processed'.format(len(documents)))
 
     utils.pickle_to_file(documents, args['output_file'])
+    print('All task finished')
 
 
 if __name__ == '__main__':
