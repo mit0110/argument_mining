@@ -124,24 +124,24 @@ class Sentence(object):
         return ' '.join(self.words)
 
 
-class AnnotatedDocument(object):
-    def __init__(self, identifier, default_label='O', title=''):
+class UnlabeledDocument(object):
+    """A class to represent a processed unlabeled document of text."""
+
+    def __init__(self, identifier, title=''):
         # List of Sentences.
         self.sentences = []
         # Representation of document as continous text.
         self.text = ''
         self.identifier = identifier
-        self.default_label = default_label
         self.title = title
         self.parse_trees = []
-        self.annotated_components = {}
-        self.named_components = {} # Temporal map to store the original names
-        # of the components to read relations later.
-        self.annotated_relations = defaultdict(dict)
 
     def build_from_text(self, text, start_index=0):
         self.text = text
-        paragraphs = self.text.split('\n')
+        if isinstance(text, str):
+            paragraphs = self.text.split('\n')
+        else:
+            paragraphs = text
         position_in_document = 0
         for paragraph_index, paragraph in enumerate(paragraphs):
             raw_sentences = sent_tokenize(paragraph)
@@ -149,11 +149,33 @@ class AnnotatedDocument(object):
                 sentence = Sentence(position_in_document=position_in_document,
                                     paragraph_number=paragraph_index,
                                     position_in_paragraph=index)
-                initial_position = self.text.find(raw_sentence) + start_index
-                assert initial_position >= 0
+                if isinstance(text, str):
+                    initial_position = self.text.find(raw_sentence) + start_index
+                    assert initial_position >= 0
+                else:
+                    initial_position = 0
                 sentence.build_from_text(raw_sentence, initial_position)
                 self.sentences.append(sentence)
                 position_in_document += 1
+
+    def parse_text(self, parser):
+        for sentence in self.sentences:
+            self.parse_trees.append(next(parser.parse(sentence.words)))
+
+    def __repr__(self):
+        return self.identifier
+
+
+class AnnotatedDocument(UnlabeledDocument):
+
+    def __init__(self, identifier, default_label='O', title=''):
+        # List of Sentences.
+        super(AnnotatedDocument, self).__init__(identifier, title)
+        self.default_label = default_label
+        self.annotated_components = {}
+        self.named_components = {} # Temporal map to store the original names
+        # of the components to read relations later.
+        self.annotated_relations = defaultdict(dict)
 
     def add_label_for_position(self, label, start, end, attribute=None):
         """Adds the given label to all words covering range."""
@@ -186,13 +208,6 @@ class AnnotatedDocument(object):
                 assert relative_start2 != 0
                 result[start1][relative_start2] = label
         return result
-
-    def parse_text(self, parser):
-        for sentence in self.sentences:
-            self.parse_trees.append(next(parser.parse(sentence.words)))
-
-    def __repr__(self):
-        return self.identifier
 
     def sample_labeled_text(self, limit=10, styles=None):
         sample = ''

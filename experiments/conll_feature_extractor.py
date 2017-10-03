@@ -1,4 +1,4 @@
-"""Functions to convert conll formated AnnotatedDocument into a numeric matrix."""
+"""Functions to convert conll formated documents into a numeric matrix."""
 
 import itertools
 import numpy

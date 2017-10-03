@@ -205,6 +205,5 @@ def main():
     utils.pickle_to_file((x_train, labels), args['output_filename'])
 
 
-
 if __name__ == '__main__':
     main()
