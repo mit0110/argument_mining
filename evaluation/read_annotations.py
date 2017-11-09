@@ -13,7 +13,7 @@ def append_path(module_path):
 
 append_path(os.path.abspath('..'))
 
-from preprocess import annotated_documents, arg_docs2conll
+from preprocess import documents, arg_docs2conll
 
 
 ANNOTATION_FORMAT = r'.*\.ann'

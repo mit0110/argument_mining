@@ -159,8 +159,13 @@ class UnlabeledDocument(object):
                 position_in_document += 1
 
     def parse_text(self, parser):
-        for sentence in self.sentences:
-            self.parse_trees.append(next(parser.parse(sentence.words)))
+        # for sentence in self.sentences:
+        try:
+            self.parse_trees = list(parser.parse_sents(
+                [sentence.words for sentence in self.sentences]))
+        except UnicodeDecodeError:
+            print('Error in parse tree {}'.format(self.identifier))
+            self.parse_trees.append(None)
 
     def __repr__(self):
         return self.identifier
