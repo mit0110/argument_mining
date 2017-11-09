@@ -15,7 +15,6 @@ Options:
 
 import os
 import sys
-import tqdm
 sys.path.insert(0, os.path.abspath('..'))
 
 import utils
@@ -47,14 +46,28 @@ def main():
             encoding='utf8')
     else:
         parser = None
+    limit = int(args['limit'])
 
     with open(args['input_file'], 'r') as input_file:
-        for line in tqdm.tqdm(input_file):
+        for line in input_file:
             if _is_new_document(line) and len(text_buffer) > 0:
-                documents.append(_create_document(text_buffer, parser))
+                try:
+                    documents.append(_create_document(text_buffer, parser))
+                except Exception as e:
+                    print('Creation failed for document: {}'.format(
+                        text_buffer[0]))
+                    print(e)
                 text_buffer = [line]
+                print('Adding case {} {}'.format(len(documents), line.strip()))
+                if limit > 0 and len(documents) >= limit:
+                    break
+
+                if len(documents) % 10 == 0:  # Partial save
+                    utils.pickle_to_file(documents, args['output_file'])
+
             else:
                 text_buffer.append(line)
+
     if len(text_buffer) > 0:
         documents.append(_create_document(text_buffer, parser))
     print('{} documents processed'.format(len(documents)))
