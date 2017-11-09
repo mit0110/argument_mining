@@ -155,54 +155,6 @@ class AnnotatedJudgementFactory(AnnotatedDocumentFactory):
             document.add_relation(label, arg1, arg2)
         return document
 
-    def __init__(self, input_filename, identifier=None):
-        super(AnnotatedJudgementFactory, self).__init__(
-            input_filename, identifier)
-        self.raw_attributes = {}
-
-    def get_labels(self):
-        """Read labels from the annotation file.
-
-        Saves the resulting labels in self.raw_labels
-        """
-        self.raw_labels = {}
-        for line in self.label_input_file.readlines():
-            if line == '':
-                continue
-            if line.startswith('T'):
-                self.process_component(line)
-            elif line.startswith('R'):
-                self.process_relation(line)
-            elif line.startswith('A'):
-                self.process_attribute(line)
-
-    def process_attribute(self, line):
-        attribute_info = line.split('\t', 2)[1]
-        name, component_name, value = attribute_info.split()
-        # label has shape label start end;start end; ...
-        self.raw_attributes[component_name] = (component_name, value)
-
-    def build_document(self):
-        """Creates a new AnnotatedDocument instance."""
-        if not len(self.raw_labels):
-            self.get_labels()
-        title = self.instance_input_file.readline()
-        content = title + self.instance_input_file.read()
-        document = self.DOCUMENT_CLASS(self.identifier, title=title)
-        document.build_from_text(content, start_index=0)
-        # Add components
-        for component, fragments in self.raw_labels.items():
-            attribute = self.raw_attributes.get(component, None)
-            first_start = fragments[0][1]
-            for label, start_index, end_index in fragments:
-                document.add_label_for_position(
-                    label, int(start_index), int(end_index), attribute)
-            document.add_component(component, int(first_start), int(end_index))
-        # Add relations
-        for arg1, arg2, label in self.raw_relations:
-            document.add_relation(label, arg1, arg2)
-        return document
-
 
 def get_input_files(input_dirpath, pattern, limit=-1):
     """Returns the names of the files in input_dirpath that matches pattern."""

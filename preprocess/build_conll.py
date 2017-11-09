@@ -68,7 +68,6 @@ class DocumentWriter(object):
                 self.end_section()
         self.end_section()
 
-
     def _write_sentence(self, sentence):
         for word_index, word in enumerate(sentence.words):
             relation = None

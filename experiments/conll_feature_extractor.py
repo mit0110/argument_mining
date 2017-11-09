@@ -52,7 +52,10 @@ def get_neightbor_lca(leaf_position, tree, following=True):
 
 def get_ancestor_by_tag(tree, start_position):
     """Returns the upper most ancestor node of start_position where the label
-    of start_position is contained in the label of the ancestor."""
+    of start_position is contained in the label of the ancestor.
+
+    This is the same as the upper most node with the same lexical head as
+    the node in start position."""
     position = tree.leaf_treeposition(start_position)
     label = tree[position]
     if hasattr(label, 'label'):  # start position is not a leaf
@@ -64,6 +67,7 @@ def get_ancestor_by_tag(tree, start_position):
                 return label
             return tree[ancestor_position].label()
         ancestor_position = ancestor_position[:-1]
+
 
 def get_parent_sibling(parse_tree, start_position):
     """Returns the labels of the parent and the right sibling of start_position.
@@ -187,7 +191,7 @@ class ConllFeatureExtractor(object):
                 # Lexical head
                 features['ls:token_comb'] = get_ancestor_by_tag(parse_tree,
                                                                 token_index)
-                # parent's sibling
+                # parent and sibling
                 labels = get_parent_sibling(parse_tree, token_index)
                 if labels:
                     features['ls:right_comb'] = '-'.join(labels)
