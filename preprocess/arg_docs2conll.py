@@ -182,7 +182,7 @@ def main():
             model_path='edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz',
             encoding='utf8')
     else:
-        parse = None
+        parser = None
     for filename in tqdm(filenames):
         with AnnotatedJudgementFactory(filename) as instance_extractor:
             document = instance_extractor.build_document()

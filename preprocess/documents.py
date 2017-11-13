@@ -43,9 +43,12 @@ class Sentence(object):
         for word, pos in pos_tags:
             word_position = text[last_position:].find(word) + last_position
             if word_position < last_position:
-                if word == u'``':
+                # This happens because the word tokenizer changes the codes
+                # for the quotes
+                if word == u'``' or word == "''":
                     word_position = text[last_position:].find(
                         '"') + last_position
+                    word = '"'
                 else:
                     raise IndexError('Word {} not in sentence {}'.format(
                         word, text))
