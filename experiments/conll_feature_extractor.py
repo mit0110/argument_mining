@@ -5,6 +5,7 @@ import numpy
 import string
 
 from collections import defaultdict
+from nltk.tree import Tree
 from sklearn.feature_extraction import DictVectorizer
 from tqdm import tqdm
 
@@ -65,16 +66,23 @@ def get_ancestor_by_tag(tree, start_position):
             return tree[ancestor_position].label()
         ancestor_position = ancestor_position[:-1]
 
-def get_parent_sibling(parse_tree, start_position):
-    """Returns the labels of the parent and the right sibling of start_position.
+
+def get_parent_sibling(tree, start_position):
+    """Returns the labels of the parent and the siblings of start_position.
     """
-    parent_position = parse_tree.leaf_treeposition(start_position)[:-1]
-    right_position = parent_position[:-1] + (parent_position[-1] + 1,)
-    if (start_position < len(parse_tree.leaves()) - 1 and
-            right_position in parse_tree.treepositions()):
-        return (parse_tree[parent_position].label(),
-                parse_tree[right_position].label())
-    return None
+    parent_position = tree.leaf_treeposition(start_position)[:-2]
+    if start_position < len(tree.leaves()) - 1:
+        parent_label = tree[parent_position].label()
+    else:
+        parent_label = None
+
+    sibling_position = parent_position[:-1] + (0,)  # Right most sibling
+    siblings = []
+    while sibling_position in tree.treepositions():
+        siblings.append(tree[sibling_position].label())
+        sibling_position = sibling_position[:-1] + (sibling_position[-1] + 1,)
+
+    return parent_label, siblings
 
 
 class ConllFeatureExtractor(object):
@@ -156,8 +164,13 @@ class ConllFeatureExtractor(object):
         if not self.use_syntactic:
             return []
         instances = []
-        for sent_index, sentence in enumerate(document.sentences):
-            parse_tree = document.parse_trees[sent_index]
+        for sent_index, tree_iterator in enumerate(document.parse_trees):
+            sentence = document.sentences[sent_index]
+            if not isinstance(tree_iterator, Tree):
+                parse_tree = next(tree_iterator)
+                document.parse_trees[sent_index] = parse_tree
+            else:
+                parse_tree = tree_iterator
             sentence_instances = []
             for token_index, _, pos_tag in sentence.iter_words():
                 features = defaultdict(int)
@@ -179,18 +192,28 @@ class ConllFeatureExtractor(object):
         if not self.use_lexical:
             return []
         instances = []
-        for sent_index, sentence in enumerate(document.sentences):
-            parse_tree = document.parse_trees[sent_index]
+        for sent_index, tree_iterator in enumerate(document.parse_trees):
+            sentence = document.sentences[sent_index]
             sentence_instances = []
-            for token_index, _, _ in sentence.iter_words():
+           
+            if not isinstance(tree_iterator, Tree):
+                parse_tree = next(tree_iterator)
+                document.parse_trees[sent_index] = parse_tree
+            else:
+                parse_tree = tree_iterator
+            for token_index, token, tag in sentence.iter_words():
                 features = defaultdict(int)
+                features['ls:token'] = token
+                features['ls:pos_tag'] = tag
                 # Lexical head
                 features['ls:token_comb'] = get_ancestor_by_tag(parse_tree,
                                                                 token_index)
                 # parent's sibling
-                labels = get_parent_sibling(parse_tree, token_index)
-                if labels:
-                    features['ls:right_comb'] = '-'.join(labels)
+                parent, siblings = get_parent_sibling(parse_tree, token_index)
+                features['ls:parent'] = parent
+                for sibling in siblings:
+                    features['ls:sibling:{}'.format(sibling)] = True
+
                 sentence_instances.append(features)
             instances.append(sentence_instances)
         return instances
@@ -220,6 +243,11 @@ class ConllFeatureExtractor(object):
         """Returns a list of dictionaries of features, one per instance."""
         instances = []
         for document in tqdm(documents):
+            if (len(document.sentences) < 5 or document.parse_trees is None
+                    or len(document.parse_trees) != len(document.sentences)):
+                print('Skipping document {} with no sentences'.format(
+                    document.identifier))
+                continue
             structural_features = self.get_structural_features(document)
             syntactic_features = self.get_syntactic_features(document)
             lexical_features = self.get_lexical_features(document)
