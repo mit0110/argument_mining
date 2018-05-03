@@ -6,14 +6,15 @@ index   token    [BI]-[entity label]:[related entity's index]:[relation label]
 
 
 Usage:
-    build_conll.py --input_filename=<filename> --output_filename=<filename> [--include_relations] [--separation=<separation>]
+    build_conll.py --input_filename=<filename> --output_dirname=<filename> [--include_relations] [--separation=<separation>]
 
 Options:
     --input_filename <filename>     The path to pickled file contianing the
                                     documents.
-    --output_filename <filename>    The path to the conll file to store the
-                                    output
-    --include_relations             Weather to include relations in the label or not.
+    --output_dirname <dirname>      The path to the directory to store the
+                                    resulting conll files
+    --include_relations             Weather to include relations in the label or
+                                    not.
     --separation <separation>       The separation level. Options are sentence,
                                     paragraph or section. Default is sentence.
 
@@ -28,8 +29,8 @@ import utils
 
 
 class DocumentWriter(object):
-    def __init__(self, output_file, include_relations=True, separation=None):
-        self.output_file = output_file
+    def __init__(self, output_dirname, include_relations=True, separation=None):
+        self.output_dirname = output_dirname
         self.token_index = 0
         self.include_relations = include_relations
         self.relations = None
@@ -54,22 +55,24 @@ class DocumentWriter(object):
         self.document = document
         self.current_paragraph = None
         self.current_section = None
-        for sentence in document.sentences:
-            if (self.separation == 'paragraph'
-                  and sentence.paragraph_number != self.current_paragraph):
-                self.current_paragraph = sentence.paragraph_number
-                self.end_section()
-            elif (self.separation == 'section'
-                  and sentence.section != self.current_section):
-                self.current_section = sentence.section
-                self.end_section()
-            self._write_sentence(sentence)
-            if self.separation == 'sentence':
-                self.end_section()
-        self.end_section()
+        output_filename = os.path.join(
+            self.output_dirname,
+            document.identifier.split('/')[-1].replace('.txt', '.conll'))
+        with open(output_filename, 'w') as output_file:
+            for sentence in document.sentences:
+                if (self.separation == 'paragraph'
+                      and sentence.paragraph_number != self.current_paragraph):
+                    self.current_paragraph = sentence.paragraph_number
+                    self.end_section(output_file)
+                elif (self.separation == 'section'
+                      and sentence.section != self.current_section):
+                    self.current_section = sentence.section
+                    self.end_section(output_file)
+                self._write_sentence(sentence, output_file)
+                if self.separation == 'sentence':
+                    self.end_section(output_file)
 
-
-    def _write_sentence(self, sentence):
+    def _write_sentence(self, sentence, output_file):
         for word_index, word in enumerate(sentence.words):
             relation = None
             target_index = None
@@ -86,7 +89,8 @@ class DocumentWriter(object):
                 if self.include_relations:
                     relation, target_index = self._get_relations(
                         self.last_component_start, self.relations)
-            self._write_line(word, bio_label, label, relation, target_index)
+            self._write_line(word, bio_label, label, relation, target_index,
+                             output_file)
 
     @staticmethod
     def _get_relations(component_start, relations):
@@ -99,21 +103,22 @@ class DocumentWriter(object):
             if relation in ['Attack', 'Support']:
                 return target, relation
 
-    def _write_line(self, word, bio_label, label, relation, target_index):
+    def _write_line(self, word, bio_label, label, relation, target_index,
+                    output_file):
         if bio_label == 'O':
-            self.output_file.write('{}\t{}\t_\t_\t{}\n'.format(
+            output_file.write('{}\t{}\t_\t_\t{}\n'.format(
                 self.token_index, word, bio_label))
         elif not self.include_relations:
-            self.output_file.write('{}\t{}\t_\t_\t{}-{}\n'.format(
+            output_file.write('{}\t{}\t_\t_\t{}-{}\n'.format(
                 self.token_index, word, bio_label, label))
         else:
-            self.output_file.write('{}\t{}\t_\t_\t{}-{}:{}:{}\n'.format(
+            output_file.write('{}\t{}\t_\t_\t{}-{}:{}:{}\n'.format(
                 self.token_index, word, bio_label, label,
                 relation, target_index))
         self.token_index += 1
 
-    def end_section(self):
-        self.output_file.write('\n')
+    def end_section(self, output_file):
+        output_file.write('\n')
 
 
 def main():
@@ -124,14 +129,14 @@ def main():
         separation = args['separation']
     else:
         separation = 'sentence'
-    with open(args['output_filename'], 'w') as output_file:
-        writer = DocumentWriter(output_file,
-                                include_relations=args['include_relations'],
-                                separation=separation)
-        for document in documents:
-            if document.has_annotation():
-                print('Adding document {}'.format(document.identifier))
-                writer.write_document(document)
+
+    writer = DocumentWriter(output_dirname=args['output_dirname'],
+                            include_relations=args['include_relations'],
+                            separation=separation)
+    for document in documents:
+        if document.has_annotation():
+            print('Adding document {}'.format(document.identifier))
+            writer.write_document(document)
 
 
 

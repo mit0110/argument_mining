@@ -13,7 +13,7 @@ Usage:
 Options:
     --input_dirpath=<dirpath>        The path to directory to read files.
     --output_filename=<filename>     The path to directory to store files.
-    --limit=<N>                  The number of files to read. -1 for all. [default: -1]
+    --limit=<N>                      The number of files to read. -1 for all. [default: -1]
     --raw_text                       Save only sentences without process.
 """
 
@@ -65,6 +65,7 @@ class LabeledSentencesExtractor(object):
             if line == '' or not line.startswith('T'):
                 continue
             label_info, text = line.split('\t')[1:3]  # Remove the first element
+            # TODO Add support for fragmented labels
             label, start_index, _ = label_info.split()
             self.raw_labels[int(start_index)] = (label, text.strip())
 
@@ -174,7 +175,7 @@ def main():
     sentences = []
     labels = []
     for filename in get_input_files(args['input_dirpath'], r'.*txt',
-                                    args['limit']):
+                                    int(args['limit'])):
         with LabeledSentencesExtractor(filename) as instance_extractor:
             labeled_senteces = instance_extractor.get_labeled_sentences()
             sentences.append(labeled_senteces[0])

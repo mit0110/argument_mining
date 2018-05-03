@@ -53,7 +53,10 @@ def get_neightbor_lca(leaf_position, tree, following=True):
 
 def get_ancestor_by_tag(tree, start_position):
     """Returns the upper most ancestor node of start_position where the label
-    of start_position is contained in the label of the ancestor."""
+    of start_position is contained in the label of the ancestor.
+
+    This is the same as the upper most node with the same lexical head as
+    the node in start position."""
     position = tree.leaf_treeposition(start_position)
     label = tree[position]
     if hasattr(label, 'label'):  # start position is not a leaf
@@ -67,8 +70,8 @@ def get_ancestor_by_tag(tree, start_position):
         ancestor_position = ancestor_position[:-1]
 
 
-def get_parent_sibling(tree, start_position):
-    """Returns the labels of the parent and the siblings of start_position.
+def get_parent_sibling(parse_tree, start_position):
+    """Returns the labels of the parent and the right sibling of start_position.
     """
     parent_position = tree.leaf_treeposition(start_position)[:-2]
     if start_position < len(tree.leaves()) - 1:
@@ -195,7 +198,7 @@ class ConllFeatureExtractor(object):
         for sent_index, tree_iterator in enumerate(document.parse_trees):
             sentence = document.sentences[sent_index]
             sentence_instances = []
-           
+
             if not isinstance(tree_iterator, Tree):
                 parse_tree = next(tree_iterator)
                 document.parse_trees[sent_index] = parse_tree
@@ -208,12 +211,10 @@ class ConllFeatureExtractor(object):
                 # Lexical head
                 features['ls:token_comb'] = get_ancestor_by_tag(parse_tree,
                                                                 token_index)
-                # parent's sibling
-                parent, siblings = get_parent_sibling(parse_tree, token_index)
-                features['ls:parent'] = parent
-                for sibling in siblings:
-                    features['ls:sibling:{}'.format(sibling)] = True
-
+                # parent and sibling
+                labels = get_parent_sibling(parse_tree, token_index)
+                if labels:
+                    features['ls:right_comb'] = '-'.join(labels)
                 sentence_instances.append(features)
             instances.append(sentence_instances)
         return instances
@@ -273,3 +274,4 @@ def get_labels_from_documents(documents):
         for sentence in document.sentences:
             labels.append(sentence.labels)
     return labels
+
