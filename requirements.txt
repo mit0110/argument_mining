@@ -1,5 +1,6 @@
-docopt=0.6.2
-scikit-learn=0.18
-sklearn-crfsuite=0.3.6
+docopt==0.6.2
+scikit-learn==0.18
+sklearn-crfsuite==0.3.6
 numpy
 tqdm
+segeval
