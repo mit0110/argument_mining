@@ -20,6 +20,7 @@ $ export CLASSPATH=$STANFORDTOOLSDIR/stanford-parser-full-XXXX-XX-XX/stanford-pa
 ```
 
 ##Experiments
+
 ### Using the sequential classifiers
 
 For brat annotations, run the following pipeline:
@@ -39,3 +40,11 @@ $ python crf_baseline.py --input_filename PICKLED_DOCUMENTS
 ```
 
 Now check the file `logs/log-crf` for your results!
+
+### Using the neural classifiers
+
+To run the script, clone the repository
+https://github.com/UKPLab/emnlp2017-bilstm-cnn-crf.git
+under the name ukplab_nets and add it the path to PYTHONPATH.
+
+export PYTHONPATH=/home/.../path_to_ukplab_nets
