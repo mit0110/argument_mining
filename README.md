@@ -47,4 +47,12 @@ To run the script, clone the repository
 https://github.com/UKPLab/emnlp2017-bilstm-cnn-crf.git
 under the name ukplab_nets and add it the path to PYTHONPATH.
 
-export PYTHONPATH=/home/.../path_to_ukplab_nets
+```bash
+export PYTHONPATH=/home/.../path_to_ukplab_nets:/home/.../path_to_ukplab_nets/ukplab_nets
+```
+
+Install Keras in the indicated version with pip
+
+```bash
+pip install keras==2.1.5
+```
