@@ -48,11 +48,15 @@ https://github.com/UKPLab/emnlp2017-bilstm-cnn-crf.git
 under the name ukplab_nets and add it the path to PYTHONPATH.
 
 ```bash
-export PYTHONPATH=/home/.../path_to_ukplab_nets:/home/.../path_to_ukplab_nets/ukplab_nets
+export PYTHONPATH=$PYTHONPATH:/home/.../path_to_ukplab_nets:/home/.../path_to_ukplab_nets/ukplab_nets
 ```
 
-Install Keras in the indicated version with pip
+Install Keras 2.1.5 and Tensorflow 1.7 with pip
 
 ```bash
 pip install keras==2.1.5
 ```
+
+To run the preprocess use
+
+python -m preprocess.ukpnets_process
