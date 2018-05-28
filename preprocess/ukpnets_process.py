@@ -2,6 +2,8 @@
 
 We can't use the same script as it looks for data in a different directory"""
 
+from __future__ import absolute_import
+
 import argparse
 import pickle
 import os

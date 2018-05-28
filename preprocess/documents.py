@@ -237,7 +237,10 @@ class AnnotatedJudgement(AnnotatedDocument):
     SECTION_REGEX = re.compile('^[A|B|C|D|III|II|I|IV]\.\s*(.{,50})$')
 
     def build_from_text(self, text, start_index=0):
-        self.text = text.decode('utf-8')
+        try:
+            self.text = text.decode('utf-8')
+        except AttributeError:
+            self.text = text
         current_section = 'Introduction'
         paragraphs = self.text.split('\n')
         position_in_document = 0
