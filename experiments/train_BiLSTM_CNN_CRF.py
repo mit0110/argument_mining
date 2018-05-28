@@ -6,10 +6,23 @@ under the name ukplab_nets and add it the path to PYTHONPATH.
 """
 
 import argparse
+import logging
 import os
+import sys
 import utils
 
 from ukplab_nets.neuralnets.BiLSTM import BiLSTM
+
+
+loggingLevel = logging.INFO
+logger = logging.getLogger()
+logger.setLevel(loggingLevel)
+
+ch = logging.StreamHandler(sys.stdout)
+ch.setLevel(loggingLevel)
+formatter = logging.Formatter('%(message)s')
+ch.setFormatter(formatter)
+logger.addHandler(ch)
 
 
 def read_args():
