@@ -7,6 +7,7 @@ under the name ukplab_nets and add it the path to PYTHONPATH.
 
 import argparse
 import os
+import numpy
 import pandas
 import utils
 
@@ -58,20 +59,23 @@ def main():
         true_labels = []
         result = []
 
-        for token, true_label_id, predicted_label in zip(
-                data[dataset_name][partition_name][0]['raw_tokens'],
-                data[dataset_name][partition_name][0][args.target_column],
-                tags[dataset_name][0]):
-            true_label = label_encoding[true_label_id]
-            true_labels.append(true_label)
-            result.append((token, true_label, predicted_label))
+        for sentence, sentence_labels in zip(data[dataset_name][partition_name],
+                                             tags[dataset_name]):
+            for token, true_label_id, predicted_label in zip(
+                    sentence['raw_tokens'], sentence[args.target_column],
+                    sentence_labels):
+                true_label = label_encoding[true_label_id]
+                true_labels.append(true_label)
+                result.append((token, true_label, predicted_label))
+
         result = pandas.DataFrame(result)
         partition_name_short = 'dev' if 'dev' in partition_name else 'test'
         output_filename = os.path.join(
             args.output_dirname,
             '{}_{}.conll'.format(dataset_name, partition_name_short))
         result.to_csv(output_filename, sep='\t', index=False)
-        print(metrics.classification_report(true_labels, tags[dataset_name][0]))
+        print(metrics.classification_report(
+	    true_labels, numpy.concatenate(tags[dataset_name])))
 
     tag_dataset('devMatrix')
     tag_dataset('testMatrix')

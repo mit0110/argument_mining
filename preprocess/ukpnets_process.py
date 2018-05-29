@@ -29,7 +29,6 @@ def read_args():
     return args
 
 
-
 def prepare_dataset(embeddings_path, datasets, output_dirpath,
                     freq_threshold_unk_tokens=50,
                     reduce_embeddings=False, value_transformations=None,
@@ -96,7 +95,7 @@ def main():
     datasets = {
         dataset_name: { # Name of the dataset
             # Name of the columns
-            'columns': {1: 'tokens', 2: 'arg_component'},
+            'columns': {1: 'tokens', 4: 'arg_component'},
             # Directory of the dataset
             'dirpath': os.path.dirname(args.dataset),
             # Which column we want to predict
