@@ -1,6 +1,9 @@
 """Script to preprocess the dataset for UKP-lstm networks.
 
-We can't use the same script as it looks for data in a different directory"""
+We can't use the same script as it looks for data in a different directory.
+
+The name of the dataset is the name of the folder where it is located
+"""
 
 from __future__ import absolute_import
 
@@ -23,6 +26,9 @@ def read_args():
     parser.add_argument('--dataset', type=str,
                         help='Path to directory with the dataset. Must be '
                              'in different files train.txt, test.txt, dev.txt')
+    parser.add_argument('--name', type=str, default=None,
+                        help='Name of the dataset to use. If None, then the '
+                             'name of the directory will be used.')
 
     args = parser.parse_args()
 
@@ -90,7 +96,11 @@ def prepare_dataset(embeddings_path, datasets, output_dirpath,
 
 def main():
     args = read_args()
-    dataset_name = os.path.split(os.path.split(args.dataset)[0])[1]
+    # The name of the dataset is the name of the folder where it is located
+    if args.name is None:
+        dataset_name = os.path.split(os.path.split(args.dataset)[0])[1]
+    else:
+        dataset_name = args.name
 
     datasets = {
         dataset_name: { # Name of the dataset

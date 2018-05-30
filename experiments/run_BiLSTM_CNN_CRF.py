@@ -72,10 +72,10 @@ def main():
         partition_name_short = 'dev' if 'dev' in partition_name else 'test'
         output_filename = os.path.join(
             args.output_dirname,
-            '{}_{}.conll'.format(dataset_name, partition_name_short))
+            'predictions_{}_{}.conll'.format(dataset_name, partition_name_short))
         result.to_csv(output_filename, sep='\t', index=False)
         print(metrics.classification_report(
-	    true_labels, numpy.concatenate(tags[dataset_name])))
+    	    true_labels, numpy.concatenate(tags[dataset_name])))
 
     tag_dataset('devMatrix')
     tag_dataset('testMatrix')

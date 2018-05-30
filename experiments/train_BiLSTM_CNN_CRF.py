@@ -42,6 +42,7 @@ def read_args():
     parser.add_argument('--char_embedding_size', type=int, default=30,
                         help='Size of the character embedding. Use 0 '
                         'for no embedding')
+    # Training parameters
     parser.add_argument('--batch_size', type=int, default=32,
                         help='Number of sentences in each batch')
     parser.add_argument('--patience', type=int, default=5,
@@ -56,8 +57,6 @@ def read_args():
     parser.add_argument('--output_dirpath', type=str,
                         help='Path to store the performance scores for dev '
                              'and test datasets')
-    parser.add_argument('--output_prediction', action='store_true',
-                        help='Output predictions to temp files')
     parser.add_argument('--epochs', type=int, default=100,
                         help='Number of epochs to train the classifier')
     parser.add_argument('--classifier', type=str, default='CRF',
@@ -97,17 +96,19 @@ def main():
     model.setDataset(datasets, data)
     # Path to store performance scores for dev / test
     if args.experiment_name is None:
-        name = os.path.join(
+        results_filename = os.path.join(
             args.output_dirpath,
             '_'.join([args.classifier, str(args.char_embedding)] +
                      [str(x) for x in args.num_units])
         )
     else:
-        name = os.path.join(args.output_dirpath, args.experiment_name)
-    model.storeResults(name)
-    # Path to store models
+        results_filename = os.path.join(args.output_dirpath,
+                            args.experiment_name + "_results.txt")
+    model.storeResults(results_filename)
+    # Path to store models. We only want to store the best model found until
+    # the moment
     model.modelSavePath = os.path.join(
-        args.output_dirpath, "[ModelName]_[DevScore]_[TestScore]_[Epoch].h5")
+        args.output_dirpath, "{}_model.h5".format(args.experiment_name))
     model.fit(epochs=args.epochs)
 
 
