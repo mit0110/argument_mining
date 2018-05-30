@@ -21,10 +21,10 @@ do
         --output_dirpath $RESULT_DIRECTORY/$SEPARATION_LEVEL/$EXPERIMENT_DIRECTORY \
         --experiment_name $PARTITION \
 		--char_embedding lstm \
-        --epochs 1 \
+        --epochs 100 \
         --classifier Softmax \
-        --num_units 50,50
-        # --dropout 0.5,0.5 \
+        --num_units 50 50
+        # --dropout 0.5 0.5 \
         # --char_embedding_size 30 \
         # --batch_size 32 \
         # --patience 5 \
