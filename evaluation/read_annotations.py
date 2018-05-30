@@ -13,7 +13,7 @@ def append_path(module_path):
 
 append_path(os.path.abspath('..'))
 
-from preprocess import annotated_documents, arg_docs2conll
+from preprocess import documents, arg_docs2conll
 
 
 ANNOTATION_FORMAT = r'.*\.ann'
@@ -94,7 +94,7 @@ def get_annotated_documents(annotations_dir, annotators):
 def read_parallel_annotations(annotator_filenames):
     annotations = {}
     for name, filename in annotator_filenames:
-        annotations[name] = get_annotation(filename, name) 
+        annotations[name] = get_annotation(filename, name)
     return annotations
 
 
