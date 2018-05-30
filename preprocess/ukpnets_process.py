@@ -107,7 +107,7 @@ def main():
             # Name of the columns
             'columns': {1: 'tokens', 4: 'arg_component'},
             # Directory of the dataset
-            'dirpath': os.path.dirname(args.dataset),
+            'dirpath': args.dataset,
             # Which column we want to predict
             'label': 'arg_component',
             # Should we evaluate on this task? Set true always for single task

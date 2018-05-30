@@ -1,10 +1,8 @@
 SEPARATION_LEVEL="paragraph"
 DATA_DIR="../../data/echr/annotation/for_training"
-RESULTING_DIR=$DATA_DIR/$SEPARATION_LEVEL
-
-mkdir $RESULTING_DIR
 
 cd preprocess
+
 echo "Creating intermidiate representation"
 
 for PARTITION_DIR in $DATA_DIR/partition*
@@ -21,12 +19,4 @@ do
     python build_conll.py --input_filename $PARTITION_DIR/dev_docs.p --output_filename $PARTITION_DIR/$SEPARATION_LEVEL/dev.txt --separation $SEPARATION_LEVEL
     python build_conll.py --input_filename $PARTITION_DIR/test_docs.p --output_filename $PARTITION_DIR/$SEPARATION_LEVEL/test.txt --separation $SEPARATION_LEVEL
 done
-
-echo "Creating embedded representation"
 cd ..
-for PARTITION_DIR in $DATA_DIR/partition*
-do
-    # This command creates the representation (with embeeddings and mappings) necessary
-    # for the ukpnets input
-    python preprocess/ukpnets_process.py --embeddings_path ../data/wordvectors/komninos_english_embeddings.gz --output_dirpath $PARTITION_DIR --dataset $PARTITION_DIR/$SEPARATION_LEVEL --name ukp
-done
