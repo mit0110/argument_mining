@@ -33,7 +33,8 @@ do
     echo "********* Evaluating model $MODEL_NAME"
     python -u experiments/run_BiLSTM_CNN_CRF.py \
         --classifier $MODEL_NAME --dataset $DATASET_NAME \
-        --output_dirname $RESULT_DIRECTORY/$SEPARATION_LEVEL/$EXPERIMENT_DIRECTORY
+        --output_dirname $RESULT_DIRECTORY/$SEPARATION_LEVEL/$EXPERIMENT_DIRECTORY \
+        --experiment_name $PARTITION
 done
 
 echo "********** All experiments completed"

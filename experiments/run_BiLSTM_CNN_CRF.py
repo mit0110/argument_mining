@@ -28,6 +28,9 @@ def read_args():
                              'and test datasets')
     parser.add_argument('--target_column', type=str, default='arg_component',
                         help='Name of the column to use as label.')
+    parser.add_argument('--experiment_name', type=str, default='',
+                        help='Name of the experiment, to use as a prefix '
+                             'of the predictions output filename.')
     args = parser.parse_args()
 
     return args
@@ -71,8 +74,8 @@ def main():
         result = pandas.DataFrame(result)
         partition_name_short = 'dev' if 'dev' in partition_name else 'test'
         output_filename = os.path.join(
-            args.output_dirname,
-            'predictions_{}_{}.conll'.format(dataset_name, partition_name_short))
+            args.output_dirname, 'predictions_{}_{}_{}.conll'.format(
+                args.experiment_name, dataset_name, partition_name_short))
         result.to_csv(output_filename, sep='\t', index=False)
         print(metrics.classification_report(
     	    true_labels, numpy.concatenate(tags[dataset_name])))
