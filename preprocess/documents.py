@@ -138,7 +138,7 @@ class UnlabeledDocument(object):
 
     def build_from_text(self, text, start_index=0):
         self.text = text
-        if isinstance(text, str):
+        if isinstance(text, str) or isinstance(text, unicode):
             paragraphs = self.text.split('\n')
         else:
             paragraphs = text
