@@ -69,21 +69,29 @@ class Sentence(object):
         return self.word_index.get(position, -1)
 
     def add_label_for_position(self, label, start, end, attribute=None):
-        """Adds label to words with positions between start and end (including).
+        """Labels words with positions between start and end (not included).
 
         Returns the last position of char_range used. If char_range doesn't
         intersect with sentence, then does nothing."""
-        if end < self.start_position or start > self.end_position:
+        if end < self.start_position or start >= self.end_position:
             return start
-        while start <= end and start < self.end_position:
+        while start < end and start < self.end_position:
             word_index = self.get_word_for_position(start)
             if word_index < 0:
-                start += 1
-                continue
+                word_index = 0
+                for position1, position2 in zip(self.word_positions[:-1],
+                                                self.word_positions[1:]):
+                    if not(start <= position2 and start >= position1):
+                        word_index += 1
+                    else:
+                        break
             self.labels[word_index] = label
             if attribute is not None:
                 self.attributes[word_index] = attribute
-            start += len(self.words[word_index])
+            if word_index == len(self.words) - 1:  # end of sentence
+                start += len(self.words[word_index]) + 1
+            else:
+                start = self.word_positions[word_index + 1]
         return start
 
     def iter_words(self):
@@ -182,9 +190,11 @@ class AnnotatedDocument(UnlabeledDocument):
         assert start >= 0 and end <= self.sentences[-1].end_position
         last_start = start
         for sentence in self.sentences:
+            if last_start > sentence.end_position:
+                continue
             last_start = sentence.add_label_for_position(
                 label, last_start, end, attribute=attribute)
-            if last_start == end:
+            if last_start >= end - 1:
                 break
 
     def add_component(self, name, start, end):
@@ -236,6 +246,21 @@ class AnnotatedJudgement(AnnotatedDocument):
 
     SECTION_REGEX = re.compile('^[A|B|C|D|III|II|I|IV]\.\s*(.{,50})$')
 
+    def get_initial_position(self, previous_sentence, raw_sentence,
+                             start_index):
+        if previous_sentence != '':
+            initial_position = self.text.find(previous_sentence) + start_index
+            current_initial_position = self.text.find(
+                raw_sentence) + start_index
+            missing_spaces = (current_initial_position -
+                              initial_position - len(previous_sentence))
+            raw_sentence = (previous_sentence + ' ' * missing_spaces +
+                            raw_sentence)
+            previous_sentence = ''
+        else:
+            initial_position = self.text.find(raw_sentence) + start_index
+        return initial_position, previous_sentence, raw_sentence
+
     def build_from_text(self, text, start_index=0):
         try:
             self.text = text.decode('utf-8')
@@ -252,15 +277,12 @@ class AnnotatedJudgement(AnnotatedDocument):
                 # Fix the tokenization for line numbers
                 if len(raw_sentence) < 4:
                     previous_sentence = raw_sentence
+                    # import ipdb; ipdb.set_trace()
                     continue
-                if previous_sentence != '':
-                    initial_position = self.text.find(
-                        previous_sentence) + start_index
-                    raw_sentence = previous_sentence + ' ' + raw_sentence
-                    previous_sentence = ''
-                else:
-                    initial_position = self.text.find(
-                        raw_sentence) + start_index
+                initial_position, previous_sentence, raw_sentence = (
+                    self.get_initial_position(previous_sentence,
+                                              raw_sentence, start_index)
+                )
                 assert initial_position >= 0
                 candidate_section = self.SECTION_REGEX.search(raw_sentence)
                 if candidate_section is not None:

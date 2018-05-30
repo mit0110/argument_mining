@@ -41,9 +41,12 @@ class DocumentWriter(object):
         self.current_section = None
 
     @staticmethod
-    def is_begin(word_start, document):
+    def is_begin(word_start, word, document):
         """Returns True if the word is the start of a component."""
-        return word_start in document.annotated_components
+        for possible_start in range(word_start, word_start+len(word)):
+            if possible_start in document.annotated_components:
+                return True
+        return False
 
     def write_document(self, document):
         self.token_index = 0
@@ -68,7 +71,6 @@ class DocumentWriter(object):
                 self.end_section()
         self.end_section()
 
-
     def _write_sentence(self, sentence):
         for word_index, word in enumerate(sentence.words):
             relation = None
@@ -78,7 +80,7 @@ class DocumentWriter(object):
             if label != self.document.default_label:
                 bio_label = 'I'
                 word_start = sentence.word_positions[word_index]
-                if self.is_begin(word_start, self.document):
+                if self.is_begin(word_start, word, self.document):
                     # Start of a new component
                     bio_label = 'B'
                     self.last_component_start = word_start
