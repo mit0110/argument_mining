@@ -71,7 +71,8 @@ def main():
                 true_labels.append(true_label)
                 result.append((token, true_label, predicted_label))
 
-        result = pandas.DataFrame(result)
+        result = pandas.DataFrame(
+            result, columns=['Token', 'True', 'Predicted'])
         partition_name_short = 'dev' if 'dev' in partition_name else 'test'
         output_filename = os.path.join(
             args.output_dirname, 'predictions_{}_{}_{}.conll'.format(

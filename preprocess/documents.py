@@ -187,7 +187,10 @@ class AnnotatedDocument(UnlabeledDocument):
 
     def add_label_for_position(self, label, start, end, attribute=None):
         """Adds the given label to all words covering range."""
-        assert start >= 0 and end <= self.sentences[-1].end_position
+        if not (start >= 0 and end <= self.sentences[-1].end_position):
+            print('WARNING: attempting to set a label from position '
+                  '{} to {} in document with max len of {}'.format(
+                start, end, self.sentences[-1].end_position))
         last_start = start
         for sentence in self.sentences:
             if last_start > sentence.end_position:

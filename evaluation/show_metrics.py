@@ -27,23 +27,28 @@ def show_kappa(labels1, labels2, identifier1, identifier2):
 
 
 def show_krippendorff_alpha(labels):
+    alpha = None
     if krippendorff_alpha is not None:
         alpha = krippendorff_alpha(labels, metric=nominal_metric,
                                    convert_items=lambda x:x, missing_items=[])
-        print('Krippendorff Alpha: {}'.format(alpha))
+        print('Krippendorff Alpha: {0:.3f}'.format(alpha))
     else:
         print('No module Krippendorff Alpha')
+    return alpha
 
 
 def show_fleiss_kappa(labels):
+    kappa = None
     if fleiss_kappa is not None:
         input = []
         for label in labels:
             input.append(numpy.unique(label, return_counts=True)[1])
         kappa = fleiss_kappa.fleiss_kappa(numpy.array(input))
-        print('Fleiss Kappa: {}'.format(kappa))
+        print('Fleiss Kappa: {0:.3f}'.format(kappa))
     else:
         print('No module Fleiss Kappa')
+    return kappa
+
 
 def show_confusion_matrix(labels1, labels2, identifier1=None, identifier2=None):
     label_names = sorted(list(set(labels1)))

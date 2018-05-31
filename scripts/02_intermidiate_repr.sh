@@ -7,6 +7,7 @@ echo "Creating intermidiate representation"
 
 for PARTITION_DIR in $DATA_DIR/partition*
 do
+    echo "Processing $PARTITION_DIR"
     # These commands create a single list of AnnotatedDocuments from all the annotations
     # in the input_dirpath
     python arg_docs2conll.py --input_dirpath $PARTITION_DIR/train/ --output_file $PARTITION_DIR/train_docs.p
