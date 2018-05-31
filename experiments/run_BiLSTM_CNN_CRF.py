@@ -12,8 +12,7 @@ import pandas
 import utils
 
 from sklearn import metrics
-from ukplab_nets.neuralnets.BiLSTM import BiLSTM
-
+from models.arg_bilstm import ArgBiLSTM
 
 def read_args():
     parser = argparse.ArgumentParser(
@@ -53,7 +52,7 @@ def main():
     label_encoding = {value: key
                       for key, value in mappings[args.target_column].items()}
 
-    model = BiLSTM.loadModel(args.classifier)
+    model = ArgBiLSTM.loadModel(args.classifier)
 
     def tag_dataset(partition_name):
         tags = model.tagSentences(data[dataset_name][partition_name])
