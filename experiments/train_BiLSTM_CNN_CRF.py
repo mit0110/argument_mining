@@ -11,7 +11,7 @@ import os
 import sys
 import utils
 
-from ukplab_nets.neuralnets.BiLSTM import BiLSTM
+from models import ArgBiLSTM
 
 
 loggingLevel = logging.INFO
@@ -91,7 +91,7 @@ def main():
     }
     print(classifier_params)
 
-    model = BiLSTM(classifier_params)
+    model = ArgBiLSTM(classifier_params)
     model.setMappings(mappings, embeddings)
     model.setDataset(datasets, data)
     # Path to store performance scores for dev / test
