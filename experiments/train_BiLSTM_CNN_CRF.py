@@ -11,7 +11,7 @@ import os
 import sys
 import utils
 
-from models import ArgBiLSTM
+from models.arg_bilstm import ArgBiLSTM
 
 
 loggingLevel = logging.INFO
