@@ -17,7 +17,7 @@ do
     # These commands write the AnnotatedDocuments as a single conll file
     # For script 03, they must be named train.txt, test.txt and dev.txt
     echo "Converting partition $PARTITION_DIR to conll format"
-    mkdir $PARTITION_DIR/$SEPARATION_LEVEL
+    mkdir $PARTITION_DIR/${SEPARATION_LEVEL}${RELATIONS}
     python build_conll.py --input_filename $PARTITION_DIR/train_docs${RELATIONS}.p --output_filename $PARTITION_DIR/${SEPARATION_LEVEL}${RELATIONS}/train.txt --separation $SEPARATION_LEVEL --include_relations
     python build_conll.py --input_filename $PARTITION_DIR/dev_docs${RELATIONS}.p --output_filename $PARTITION_DIR/${SEPARATION_LEVEL}${RELATIONS}/dev.txt --separation $SEPARATION_LEVEL --include_relations
     python build_conll.py --input_filename $PARTITION_DIR/test_docs${RELATIONS}.p --output_filename $PARTITION_DIR/${SEPARATION_LEVEL}${RELATIONS}/test.txt --separation $SEPARATION_LEVEL --include_relations
