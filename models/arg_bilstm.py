@@ -2,6 +2,8 @@
 
 It has some more flexible functions, but the core of the model is the same."""
 
+import numpy
+
 from sklearn import metrics
 from ukplab_nets.neuralnets.BiLSTM import BiLSTM
 
@@ -20,9 +22,9 @@ class ArgBiLSTM(BiLSTM):
         model = self.models[modelName]
         idx2Label = self.idx2Labels[modelName]
 
-        correctLabels = [sentences[idx][labelKey]
-                         for idx in range(len(sentences))]
-        predLabels = self.predictLabels(model, sentences)
+        correctLabels = numpy.concatenate([sentences[idx][labelKey]
+                         for idx in range(len(sentences))])
+        predLabels = numpy.concatenate(self.predictLabels(model, sentences))
 
         pre, rec, f1, _ = metrics.precision_recall_fscore_support(
             correctLabels, predLabels, average='weighted', warn_for=[])
