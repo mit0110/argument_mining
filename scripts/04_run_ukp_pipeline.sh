@@ -24,7 +24,7 @@ do
         --experiment_name $PARTITION \
 		--char_embedding lstm \
         --epochs 50 \
-        --classifier CRF \
+        --classifier Softmax \
         --patience 10 \
         --dropout 0.2 0.2 \
         --batch_size 100 \
@@ -40,4 +40,4 @@ do
 done
 
 echo "********** All experiments completed"
-mv $RESULT_DIRECTORY/${SEPARATION_LEVEL}${RELATIONS}/$EXPERIMENT_DIRECTORY $RESULT_DIRECTORY/$SEPARATION_LEVEL/$DATE
+mv $RESULT_DIRECTORY/${SEPARATION_LEVEL}${RELATIONS}/$EXPERIMENT_DIRECTORY $RESULT_DIRECTORY/${SEPARATION_LEVEL}${RELATIONS}/$DATE
