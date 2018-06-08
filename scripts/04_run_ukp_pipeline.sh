@@ -4,7 +4,7 @@
 DATE=$(date +%y-%m-%d-%H-%M)
 RESULT_DIRECTORY="../results/ukpnets"
 EXPERIMENT_DIRECTORY="ongoing-"$DATE
-RELATIONS="_wrel"
+RELATIONS="" #"_wrel"
 SEPARATION_LEVEL="paragraph"
 DATA_DIR="../data/echr/annotation/for_training"
 echo "******** Starting experiment $DATE"
@@ -23,13 +23,13 @@ do
         --output_dirpath $RESULT_DIRECTORY/${SEPARATION_LEVEL}${RELATIONS}/$EXPERIMENT_DIRECTORY \
         --experiment_name $PARTITION \
 		--char_embedding lstm \
+        --char_embedding_size 64 \
         --epochs 50 \
-        --classifier Softmax \
+        --classifier CRF \
         --patience 10 \
         --dropout 0.2 0.2 \
         --batch_size 100 \
-        --num_units 100 100
-        # --char_embedding_size 30 \
+        --num_units 50 50
     # Now we need to evaluate the model
     MODEL_NAME=$(compgen -f $RESULT_DIRECTORY/${SEPARATION_LEVEL}${RELATIONS}/$EXPERIMENT_DIRECTORY/$PARTITION*h5)
     echo "********* Evaluating model $MODEL_NAME"
