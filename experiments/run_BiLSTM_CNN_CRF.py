@@ -12,7 +12,7 @@ import pandas
 import utils
 
 from sklearn import metrics
-from models.arg_bilstm import ArgBiLSTM
+from models.arg_bilstm import ArgBiLSTM, AttArgBiLSTM
 
 def read_args():
     parser = argparse.ArgumentParser(
@@ -30,6 +30,8 @@ def read_args():
     parser.add_argument('--experiment_name', type=str, default='',
                         help='Name of the experiment, to use as a prefix '
                              'of the predictions output filename.')
+    parser.add_argument('--use_attention', action='store_true',
+                        help='Use an attention network.')
     args = parser.parse_args()
 
     return args
@@ -52,30 +54,43 @@ def main():
     label_encoding = {value: key
                       for key, value in mappings[args.target_column].items()}
 
-    model = ArgBiLSTM.loadModel(args.classifier)
+    if not args.use_attention:
+        model = ArgBiLSTM.loadModel(args.classifier)
+    else:
+        model = AttArgBiLSTM.loadModel(args.classifier)
 
     def tag_dataset(partition_name):
-        tags = model.tagSentences(data[dataset_name][partition_name])
+        partition_name_short = 'dev' if 'dev' in partition_name else 'test'
+        output_filename = os.path.join(
+            args.output_dirname, 'predictions_{}_{}_{}.conll'.format(
+                args.experiment_name, dataset_name, partition_name_short))
+
+        if args.use_attention:
+            tags, attention = model.predict(
+                data[dataset_name][partition_name], return_attention=True)
+            attention_filename = os.path.join(
+                args.output_dirname, 'attention_{}_{}_{}.conll'.format(
+                    args.experiment_name, dataset_name, partition_name_short))
+            utils.pickle_to_file(attention, attention_filename)
+            del attention
+        else:
+            tags = model.tagSentences(data[dataset_name][partition_name])
         assert (len(data[dataset_name][partition_name][0]['raw_tokens']) ==
                 len(tags[dataset_name][0]))
         true_labels = []
         result = []
 
-        for sentence, sentence_labels in zip(data[dataset_name][partition_name],
-                                             tags[dataset_name]):
+        for idx, (sentence, sentence_labels) in zip(
+                data[dataset_name][partition_name], tags[dataset_name]):
             for token, true_label_id, predicted_label in zip(
                     sentence['raw_tokens'], sentence[args.target_column],
                     sentence_labels):
                 true_label = label_encoding[true_label_id]
                 true_labels.append(true_label)
-                result.append((token, true_label, predicted_label))
+                result.append((token, true_label, predicted_label, idx))
 
         result = pandas.DataFrame(
-            result, columns=['Token', 'True', 'Predicted'])
-        partition_name_short = 'dev' if 'dev' in partition_name else 'test'
-        output_filename = os.path.join(
-            args.output_dirname, 'predictions_{}_{}_{}.conll'.format(
-                args.experiment_name, dataset_name, partition_name_short))
+            result, columns=['Token', 'True', 'Predicted', 'Sentence'])
         result.to_csv(output_filename, sep='\t', index=False)
         print(metrics.classification_report(
     	    true_labels, numpy.concatenate(tags[dataset_name])))

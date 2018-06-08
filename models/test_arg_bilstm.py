@@ -24,7 +24,7 @@ class ArgBiLSTMTest(unittest.TestCase):
                 'other': 1
             }
         }
-        data = {'name' : {
+        self.data = {'name' : {
             'trainMatrix': [{
                     'labels': [0, 0],
                     'raw_tokens': ['hello', 'world'],
@@ -37,9 +37,9 @@ class ArgBiLSTMTest(unittest.TestCase):
                     'casing': [4, 4, 4, 4, 4]
                 },{
                     'labels': [0, 0],
-                    'raw_tokens': ['hello', 'world'],
-                    'tokens': [1, 2],
-                    'casing': [5, 4]
+                    'raw_tokens': ['PADDING', 'world'],
+                    'tokens': [0, 2],
+                    'casing': [0, 4]  # We have a padding token?
                 }
             ],
             'devMatrix': [{
@@ -69,7 +69,7 @@ class ArgBiLSTMTest(unittest.TestCase):
 
         self.model = self.MODEL(classifier_params)
         self.model.setMappings(mappings, embeddings)
-        self.model.setDataset(datasets, data)
+        self.model.setDataset(datasets, self.data)
 
     def test_build(self):
         """Test the model can be successfully built"""
@@ -82,6 +82,25 @@ class ArgBiLSTMTest(unittest.TestCase):
 
 class AttArgBiLSTMTest(ArgBiLSTMTest):
     MODEL = arg_bilstm.AttArgBiLSTM
+
+    def test_predict(self):
+        """Test the model can be fitted"""
+        self.model.fit(epochs=1)
+        labels = self.model.predict(self.data['name']['trainMatrix'])
+        for sentence_label, sentence in zip(
+                labels['name'], self.data['name']['trainMatrix']):
+            no_pad_tokens = len([x for x in sentence['tokens'] if x != 0])
+            self.assertEqual(no_pad_tokens, len(sentence_label))
+
+    def test_predict_attention(self):
+        """Test the model can be fitted"""
+        self.model.fit(epochs=1)
+        labels, attention = self.model.predict(self.data['name']['trainMatrix'],
+                                    return_attention=True)
+        for sentence_attention, sentence in zip(
+                attention['name'], self.data['name']['trainMatrix']):
+            no_pad_tokens = len([x for x in sentence['tokens'] if x != 0])
+            self.assertEqual(no_pad_tokens, len(sentence_attention))
 
 
 if __name__ == '__main__':

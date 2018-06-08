@@ -11,7 +11,7 @@ import os
 import sys
 import utils
 
-from models.arg_bilstm import ArgBiLSTM
+from models.arg_bilstm import ArgBiLSTM, AttArgBiLSTM
 
 
 loggingLevel = logging.INFO
@@ -64,6 +64,8 @@ def read_args():
                              'CRF or Softmax.')
     parser.add_argument('--experiment_name', type=str, default=None,
                         help='Name of the experiment to store the results')
+    parser.add_argument('--use_attention', action='store_true',
+                        help='Use an attention network.')
     args = parser.parse_args()
 
     assert len(args.num_units) == len(args.dropout)
@@ -91,7 +93,10 @@ def main():
     }
     print(classifier_params)
 
-    model = ArgBiLSTM(classifier_params)
+    if not args.use_attention:
+        model = ArgBiLSTM(classifier_params)
+    else:
+        model = AttArgBiLSTM(classifier_params)
     model.setMappings(mappings, embeddings)
     model.setDataset(datasets, data)
     # Path to store performance scores for dev / test
@@ -103,7 +108,7 @@ def main():
         )
     else:
         results_filename = os.path.join(args.output_dirpath,
-                            args.experiment_name + "_results.txt")
+                                        args.experiment_name + "_results.txt")
     model.storeResults(results_filename)
     # Path to store models. We only want to store the best model found until
     # the moment
