@@ -53,7 +53,6 @@ def main():
     dataset_name = [x for x in data.keys()][0]  # I hate python 3
     label_encoding = {value: key
                       for key, value in mappings[args.target_column].items()}
-
     if not args.use_attention:
         model = ArgBiLSTM.loadModel(args.classifier)
     else:
@@ -80,8 +79,8 @@ def main():
         true_labels = []
         result = []
 
-        for idx, (sentence, sentence_labels) in zip(
-                data[dataset_name][partition_name], tags[dataset_name]):
+        for idx, (sentence, sentence_labels) in enumerate(zip(
+                data[dataset_name][partition_name], tags[dataset_name])):
             for token, true_label_id, predicted_label in zip(
                     sentence['raw_tokens'], sentence[args.target_column],
                     sentence_labels):

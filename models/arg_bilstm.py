@@ -2,21 +2,43 @@
 
 It has some more flexible functions, but the core of the model is the same."""
 
+import h5py
+import json
 import keras.backend as K
 import logging
+import math
 import numpy
 
 from sklearn import metrics
 from ukplab_nets.neuralnets.BiLSTM import BiLSTM
-from ukplab_nets.neuralnets.keraslayers.ChainCRF import ChainCRF
+from ukplab_nets.neuralnets.keraslayers.ChainCRF import (
+    ChainCRF, create_custom_objects)
 
 from keras import optimizers, layers
-from keras.models import Model
+from keras.models import Model, load_model
 from collections import defaultdict
 
 
 class ArgBiLSTM(BiLSTM):
     """BiLSTM model tailored for argumentation mining tasks"""
+
+    @classmethod
+    def loadModel(cls, modelPath):
+        model = load_model(modelPath, custom_objects=create_custom_objects())
+        with h5py.File(modelPath, 'r') as f:
+            mappings = json.loads(f.attrs['mappings'])
+            params = json.loads(f.attrs['params'])
+            modelName = f.attrs['modelName']
+            labelKey = f.attrs['labelKey']
+
+        bilstm = cls(params)
+        bilstm.setMappings(mappings, None)
+        bilstm.models = {modelName: model}
+        bilstm.labelKeys = {modelName: labelKey}
+        bilstm.idx2Labels = {}
+        bilstm.idx2Labels[modelName] = {
+            v: k for k, v in bilstm.mappings[labelKey].items()}
+        return bilstm
 
     def computeScore(self, modelName, devMatrix, testMatrix):
         return self.computeF1Scores(modelName, devMatrix, testMatrix)
@@ -65,7 +87,7 @@ class ArgBiLSTM(BiLSTM):
             mergeInputLayers.append(feature_embedding)
         return inputNodes, mergeInputLayers
 
-    def addCharEmbeddings(self):
+    def addCharEmbeddings(self, inputNodes, mergeInputLayers):
         # :: Character Embeddings ::
         logging.info("Pad words to uniform length for characters embeddings")
         all_sentences = []

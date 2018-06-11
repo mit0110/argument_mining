@@ -4,7 +4,7 @@
 DATE=$(date +%y-%m-%d-%H-%M)
 RESULT_DIRECTORY="../results/ukpnets"
 EXPERIMENT_DIRECTORY="ongoing-"$DATE
-RELATIONS="_wrel"
+RELATIONS=""
 SEPARATION_LEVEL="paragraph"
 DATA_DIR="../data/echr/annotation/for_training"
 echo "******** Starting experiment $DATE"
@@ -30,7 +30,7 @@ do
         --patience 10 \
         --dropout 0.2 0.2 \
         --batch_size 100 \
-        --num_units 100 100
+        --num_units 50 50
         # --char_embedding_size 30 \
     # Now we need to evaluate the model
     MODEL_NAME=$(compgen -f $RESULT_DIRECTORY/${SEPARATION_LEVEL}${RELATIONS}/$EXPERIMENT_DIRECTORY/$PARTITION*h5)
@@ -43,4 +43,4 @@ do
 done
 
 echo "********** All experiments completed"
-mv $RESULT_DIRECTORY/${SEPARATION_LEVEL}${RELATIONS}/$EXPERIMENT_DIRECTORY $RESULT_DIRECTORY/$SEPARATION_LEVEL/$DATE
+mv $RESULT_DIRECTORY/${SEPARATION_LEVEL}${RELATIONS}/$EXPERIMENT_DIRECTORY $RESULT_DIRECTORY/${SEPARATION_LEVEL}${RELATIONS}/$DATE
