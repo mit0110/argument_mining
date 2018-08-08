@@ -322,7 +322,7 @@ class AttArgBiLSTM(ArgBiLSTM):
             name='attention_matrix_score')(merged_input)
         # Calculate a single score for each timestep
         att_layer = layers.Lambda(lambda x: K.mean(x, axis=2),
-                        name='attention_vector_score')(att_layer)
+                                  name='attention_vector_score')(att_layer)
         # Reshape to obtain the same shape as input
         att_layer = layers.Permute((2, 1))(
             layers.RepeatVector(feature_vector_size)(att_layer))

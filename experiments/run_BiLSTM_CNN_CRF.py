@@ -68,7 +68,7 @@ def main():
             tags, attention = model.predict(
                 data[dataset_name][partition_name], return_attention=True)
             attention_filename = os.path.join(
-                args.output_dirname, 'attention_{}_{}_{}.conll'.format(
+                args.output_dirname, 'attention_{}_{}_{}.p'.format(
                     args.experiment_name, dataset_name, partition_name_short))
             utils.pickle_to_file(attention, attention_filename)
             del attention

@@ -34,7 +34,7 @@ def read_args():
     parser.add_argument('--dropout', nargs='+', default=[0.5, 0.5], type=float,
                         help='Dropout ratio for every layer')
     parser.add_argument('--char_embedding', type=str, default=None,
-                        choices=[None, 'lstm', 'cnn'],
+                        choices=['None', 'lstm', 'cnn'],
                         help='Type of character embedding. Options are: None, '
                         'lstm or cnn. LSTM embeddings are from '
                         'Lample et al., 2016, CNN embeddings from '
