@@ -14,7 +14,7 @@ class TimePreAttArgBiLSTM(ArgBiLSTM):
 
     The attention is applied timestep wise before the BiLSTM layer."""
 
-    def addAttentionLayer(self, merged_input):
+    def addPreAttentionLayer(self, merged_input):
         """Add attention mechanisms to the tensor merged_input.
 
         Args:
@@ -35,7 +35,7 @@ class TimePreAttArgBiLSTM(ArgBiLSTM):
         # Reshape to obtain the same shape as input
         att_layer = layers.Permute((2, 1))(
             layers.RepeatVector(feature_vector_size)(att_layer))
-        merged_input = layers.merge([att_layer, merged_input],  mode='mul')
+        merged_input = layers.multiply([att_layer, merged_input])
         return merged_input
 
     def label_and_attention(self, model, input_):

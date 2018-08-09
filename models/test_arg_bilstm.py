@@ -3,11 +3,13 @@
 import numpy
 import unittest
 
-from models import arg_bilstm
+from models.arg_bilstm import ArgBiLSTM
+from models.att_arg_bilstm import TimePreAttArgBiLSTM
+
 
 class ArgBiLSTMTest(unittest.TestCase):
     """Tests for the ArgBiLSTM model"""
-    MODEL = arg_bilstm.ArgBiLSTM
+    MODEL = ArgBiLSTM
 
     def setUp(self):
         self.batch_size = 10
@@ -81,7 +83,7 @@ class ArgBiLSTMTest(unittest.TestCase):
 
 
 class AttArgBiLSTMTest(ArgBiLSTMTest):
-    MODEL = arg_bilstm.AttArgBiLSTM
+    MODEL = TimePreAttArgBiLSTM
 
     def test_predict(self):
         """Test the model can be fitted"""

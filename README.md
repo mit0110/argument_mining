@@ -1,4 +1,4 @@
-##Setting the environment
+## Setting the environment
 
 ### NLTK downloads
 
@@ -19,7 +19,7 @@ $ export STANFORDTOOLSDIR=STANFORD_FOLDER
 $ export CLASSPATH=$STANFORDTOOLSDIR/stanford-parser-full-XXXX-XX-XX/stanford-parser.jar:$STANFORDTOOLSDIR/stanford-parser-full-XXXX-XX-XX/stanford-parser-3.6.0-models.jar:$STANFORDTOOLSDIR/stanford-parser-full-XXXX-XX-XX/slf4j-api.jar
 ```
 
-##Experiments
+## Experiments
 
 ### Using the sequential classifiers
 
@@ -57,6 +57,24 @@ Install Keras 2.1.5 and Tensorflow 1.7 with pip
 pip install keras==2.1.5
 ```
 
+### Running preprocess
+
 To run the preprocess use
 
+```
 python -m preprocess.ukpnets_process
+```
+
+### Running test
+
+```
+python -m models.test_filename
+```
+
+or use nose directly (you wont see the output):
+
+```
+nosetests models.test_arg_bilstm
+nosetests models.test_arg_bilstm --nologcapture
+nosetests models.test_arg_bilstm:AttArgBiLSTMTest.test_predict_attention
+```
