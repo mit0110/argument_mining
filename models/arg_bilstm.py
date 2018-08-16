@@ -51,20 +51,20 @@ class FixedSizeBiLSTM(BiLSTM):
             end = start + batch_size
 
             for model_name in self.modelNames:
+                sentence_size = self.max_sentece_length[model_name]
                 trainMatrix = self.data[model_name]['trainMatrix']
                 label_name = self.labelKeys[model_name]
                 n_class_labels = len(self.mappings[self.labelKeys[model_name]])
                 labels = pad_sequences(
                     [example[label_name] for example in trainMatrix[start:end]],
-                     self.max_sentece_length[model_name])
+                     sentence_size)
                 batches[model_name] = [numpy.expand_dims(labels, -1)]
 
                 for feature_name in self.params['featureNames']:
                     inputData = pad_sequences(
                         [numpy.asarray(instance[feature_name]) + 1  # remove 0s
-                         for instance in trainMatrix[start:end]])
+                         for instance in trainMatrix[start:end]], sentence_size)
                     batches[model_name].append(inputData)
-
             yield batches
 
 
