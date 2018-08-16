@@ -23,49 +23,60 @@ from collections import defaultdict
 class FixedSizeBiLSTM(BiLSTM):
     """BiLSTM model with a fixed number of timesteps for sequences."""
 
-    def __init__(self, params=None):
-        super(FixedSizeBiLSTM, self).__init__(params)
-        self.max_sentece_length = {}
-
-    def minibatch_iterate_dataset(self, batch_size=32):
+    def minibatch_iterate_dataset(self, batch_size=32, partition='trainMatrix'):
         """Create mini-batches with the same number of timesteps.
 
         Sentences and mini-batch chunks are shuffled and used to the
-        train the model."""
+        train the model.
+
+        Args:
+            batch_size: (int) the maximum size of the partitions to create.
+                The last batch may be smaller.
+            partition: (str) the name of the partition to use (ex trainMatrix).
+        """
 
         for model_name in self.modelNames:
-            if not model_name in self.max_sentece_length:
-                # Calculate max_sentece_length
-                train_data = self.data[model_name]['trainMatrix']
-                self.max_sentece_length[model_name] = max([len(x['tokens'])
-                                                          for x in train_data])
-
             # Shuffle the order of the examples
-            numpy.random.shuffle(self.data[model_name]['trainMatrix'])
+            numpy.random.shuffle(self.data[model_name][partition])
 
         # Iterate over the examples
         batches = {}
-        training_examples = len(self.data[model_name]['trainMatrix'])
+        training_examples = len(self.data[model_name][partition])
         for start in range(0, training_examples, batch_size):
             batches.clear()
             end = start + batch_size
 
             for model_name in self.modelNames:
-                sentence_size = self.max_sentece_length[model_name]
-                trainMatrix = self.data[model_name]['trainMatrix']
+                trainMatrix = self.data[model_name][partition]
                 label_name = self.labelKeys[model_name]
                 n_class_labels = len(self.mappings[self.labelKeys[model_name]])
                 labels = pad_sequences(
-                    [example[label_name] for example in trainMatrix[start:end]],
-                     sentence_size)
+                    [example[label_name] for example in trainMatrix[start:end]])
                 batches[model_name] = [numpy.expand_dims(labels, -1)]
 
                 for feature_name in self.params['featureNames']:
-                    inputData = pad_sequences(
+                    instances = pad_sequences(
                         [numpy.asarray(instance[feature_name]) + 1  # remove 0s
-                         for instance in trainMatrix[start:end]], sentence_size)
-                    batches[model_name].append(inputData)
+                         for instance in trainMatrix[start:end]])
+                    batches[model_name].append(instances)
             yield batches
+
+    def predictLabels(self, model, sentences, batch_size=64):
+        pred_labels = []
+
+        for start in range(0, len(sentences), batch_size):
+            end = start + batch_size
+            instances = []
+            for feature_name in self.params['featureNames']:
+                input_data = pad_sequences(
+                    [numpy.asarray(instance[feature_name]) + 1  # remove 0s
+                     for instance in sentences[start:end]])
+                instances.append(input_data)
+
+            predictions = model.predict(instances, verbose=False)
+            predictions = predictions.argmax(axis=-1) #Predict classes
+            pred_labels.append(predictions)
+        return numpy.concatenate(pred_labels)
 
 
 class ArgBiLSTM(FixedSizeBiLSTM):
@@ -100,12 +111,12 @@ class ArgBiLSTM(FixedSizeBiLSTM):
         model = self.models[modelName]
         idx2Label = self.idx2Labels[modelName]
 
-        correctLabels = numpy.concatenate([sentences[idx][labelKey]
+        true_labels = numpy.concatenate([sentences[idx][labelKey]
                          for idx in range(len(sentences))])
         pred_labels = numpy.concatenate(self.predictLabels(model, sentences))
 
         pre, rec, f1, _ = metrics.precision_recall_fscore_support(
-            correctLabels, pred_labels, average='weighted', warn_for=[])
+            true_labels, pred_labels, average='weighted', warn_for=[])
 
         return pre, rec, f1
 
@@ -361,4 +372,3 @@ class ArgBiLSTM(FixedSizeBiLSTM):
             #logging.info("Optimizer: %s - %s" % (str(type(model.optimizer)), str(model.optimizer.get_config())))
 
             self.models[modelName] = model
-

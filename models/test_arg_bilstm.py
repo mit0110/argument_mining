@@ -81,6 +81,17 @@ class ArgBiLSTMTest(unittest.TestCase):
         """Test the model can be fitted"""
         self.model.fit(epochs=2)
 
+    def test_tag_sentences(self):
+        """Test if the model can tag sentences."""
+        self.model.buildModel()
+        sentences = self.data['name']['trainMatrix']
+        predicted_labels = self.model.tagSentences(sentences)
+        self.assertEqual(len(sentences), len(predicted_labels['name']))
+        for true, predicted in zip(sentences, predicted_labels):
+            self.assertEqual(numpy.asarray(true).shape,
+                             numpy.asarray(predicted).shape)
+
+
 
 class AttArgBiLSTMTest(ArgBiLSTMTest):
     MODEL = TimePreAttArgBiLSTM
