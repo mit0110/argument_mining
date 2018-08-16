@@ -16,10 +16,59 @@ from ukplab_nets.neuralnets.keraslayers.ChainCRF import (
 
 from keras import optimizers, layers
 from keras.models import Model, load_model
+from keras.preprocessing.sequence import pad_sequences
 from collections import defaultdict
 
 
-class ArgBiLSTM(BiLSTM):
+class FixedSizeBiLSTM(BiLSTM):
+    """BiLSTM model with a fixed number of timesteps for sequences."""
+
+    def __init__(self, params=None):
+        super(FixedSizeBiLSTM, self).__init__(params)
+        self.max_sentece_length = {}
+
+    def minibatch_iterate_dataset(self, batch_size=32):
+        """Create mini-batches with the same number of timesteps.
+
+        Sentences and mini-batch chunks are shuffled and used to the
+        train the model."""
+
+        for model_name in self.modelNames:
+            if not model_name in self.max_sentece_length:
+                # Calculate max_sentece_length
+                train_data = self.data[model_name]['trainMatrix']
+                self.max_sentece_length[model_name] = max([len(x['tokens'])
+                                                          for x in train_data])
+
+            # Shuffle the order of the examples
+            numpy.random.shuffle(self.data[model_name]['trainMatrix'])
+
+        # Iterate over the examples
+        batches = {}
+        training_examples = len(self.data[model_name]['trainMatrix'])
+        for start in range(0, training_examples, batch_size):
+            batches.clear()
+            end = start + batch_size
+
+            for model_name in self.modelNames:
+                trainMatrix = self.data[model_name]['trainMatrix']
+                label_name = self.labelKeys[model_name]
+                n_class_labels = len(self.mappings[self.labelKeys[model_name]])
+                labels = pad_sequences(
+                    [example[label_name] for example in trainMatrix[start:end]],
+                     self.max_sentece_length[model_name])
+                batches[model_name] = [numpy.expand_dims(labels, -1)]
+
+                for feature_name in self.params['featureNames']:
+                    inputData = pad_sequences(
+                        [numpy.asarray(instance[feature_name]) + 1  # remove 0s
+                         for instance in trainMatrix[start:end]])
+                    batches[model_name].append(inputData)
+
+            yield batches
+
+
+class ArgBiLSTM(FixedSizeBiLSTM):
     """BiLSTM model tailored for argumentation mining tasks"""
 
     @classmethod

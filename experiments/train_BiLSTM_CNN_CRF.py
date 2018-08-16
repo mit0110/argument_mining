@@ -11,7 +11,13 @@ import os
 import sys
 import utils
 
-from models.arg_bilstm import ArgBiLSTM, AttArgBiLSTM
+from models.arg_bilstm import ArgBiLSTM
+from models.att_arg_bilstm import TimePreAttArgBiLSTM, TimePostAttArgBiLSTM
+
+ATTENTION_MODELS = {
+    'time_pre': TimePreAttArgBiLSTM,
+    'time_post': TimePostAttArgBiLSTM
+}
 
 
 loggingLevel = logging.INFO
@@ -64,8 +70,9 @@ def read_args():
                              'CRF or Softmax.')
     parser.add_argument('--experiment_name', type=str, default=None,
                         help='Name of the experiment to store the results')
-    parser.add_argument('--use_attention', action='store_true',
-                        help='Use an attention network.')
+    parser.add_argument('--attention_model', type=str, default='None',
+                        help='Use the specified attention mechanism. Options: '
+                             'None, ' + ', '.join(ATTENTION_MODELS.keys()))
     args = parser.parse_args()
 
     assert len(args.num_units) == len(args.dropout)
@@ -93,7 +100,9 @@ def main():
     }
     print(classifier_params)
 
-    if not args.use_attention:
+    attention_model = ATTENTION_MODELS.get(args.attention_model, None)
+    print('Attention model: {}'.format(attention_model))
+    if attention_model is None:
         model = ArgBiLSTM(classifier_params)
     else:
         model = AttArgBiLSTM(classifier_params)
