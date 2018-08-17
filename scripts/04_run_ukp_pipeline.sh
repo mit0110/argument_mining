@@ -24,7 +24,7 @@ do
         --experiment_name $PARTITION \
 		--char_embedding lstm \
         --char_embedding_size 16 \
-        --epochs 1 \
+        --epochs 50 \
         --classifier CRF \
         --patience 10 \
         --dropout 0.2 0.2 \
