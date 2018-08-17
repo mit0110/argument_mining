@@ -21,7 +21,7 @@ do
     # The model resulting from this command will be saved in --output_dirpath + --experiment_name _model.h5
     python -u experiments/train_BiLSTM_CNN_CRF.py \
         --dataset $DATASET_NAME \
-        --use_attention \
+        --attention_model time_pre \
         --output_dirpath $RESULT_DIRECTORY/${SEPARATION_LEVEL}${RELATIONS}/$EXPERIMENT_DIRECTORY \
         --experiment_name $PARTITION \
         --char_embedding lstm \
