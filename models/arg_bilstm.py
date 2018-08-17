@@ -75,8 +75,14 @@ class FixedSizeBiLSTM(BiLSTM):
 
             predictions = model.predict(instances, verbose=False)
             predictions = predictions.argmax(axis=-1) #Predict classes
-            pred_labels.append(predictions)
-        return numpy.concatenate(pred_labels)
+            # We need to "unpad" the predicted labels. We use the
+            # lenght of any random feature in the sentence. (all features
+            # should be valid for a sentence.
+            pred_labels.extend([
+                pred[-len(sentence[feature_name]):]
+                for pred, sentence in zip(predictions, sentences[start:end])])
+
+        return pred_labels
 
 
 class ArgBiLSTM(FixedSizeBiLSTM):
@@ -110,11 +116,9 @@ class ArgBiLSTM(FixedSizeBiLSTM):
         labelKey = self.labelKeys[modelName]
         model = self.models[modelName]
         idx2Label = self.idx2Labels[modelName]
-
         true_labels = numpy.concatenate([sentences[idx][labelKey]
                          for idx in range(len(sentences))])
         pred_labels = numpy.concatenate(self.predictLabels(model, sentences))
-
         pre, rec, f1, _ = metrics.precision_recall_fscore_support(
             true_labels, pred_labels, average='weighted', warn_for=[])
 
