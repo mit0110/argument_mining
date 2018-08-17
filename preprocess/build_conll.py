@@ -42,9 +42,12 @@ class DocumentWriter(object):
         self.current_section = None
 
     @staticmethod
-    def is_begin(word_start, document):
+    def is_begin(word_start, word, document):
         """Returns True if the word is the start of a component."""
-        return word_start in document.annotated_components
+        for possible_start in range(word_start, word_start+len(word)):
+            if possible_start in document.annotated_components:
+                return True
+        return False
 
     def write_document(self, document):
         self.token_index = 0
@@ -55,24 +58,22 @@ class DocumentWriter(object):
         self.document = document
         self.current_paragraph = None
         self.current_section = None
-        output_filename = os.path.join(
-            self.output_dirname,
-            document.identifier.split('/')[-1].replace('.txt', '.conll'))
-        with open(output_filename, 'w') as output_file:
-            for sentence in document.sentences:
-                if (self.separation == 'paragraph'
-                      and sentence.paragraph_number != self.current_paragraph):
-                    self.current_paragraph = sentence.paragraph_number
-                    self.end_section(output_file)
-                elif (self.separation == 'section'
-                      and sentence.section != self.current_section):
-                    self.current_section = sentence.section
-                    self.end_section(output_file)
-                self._write_sentence(sentence, output_file)
-                if self.separation == 'sentence':
-                    self.end_section(output_file)
 
-    def _write_sentence(self, sentence, output_file):
+        for sentence in document.sentences:
+            if (self.separation == 'paragraph'
+                  and sentence.paragraph_number != self.current_paragraph):
+                self.current_paragraph = sentence.paragraph_number
+                self.end_section()
+            elif (self.separation == 'section'
+                  and sentence.section != self.current_section):
+                self.current_section = sentence.section
+                self.end_section()
+            self._write_sentence(sentence)
+            if self.separation == 'sentence':
+                self.end_section()
+        self.end_section()
+
+    def _write_sentence(self, sentence):
         for word_index, word in enumerate(sentence.words):
             relation = None
             target_index = None
@@ -81,7 +82,7 @@ class DocumentWriter(object):
             if label != self.document.default_label:
                 bio_label = 'I'
                 word_start = sentence.word_positions[word_index]
-                if self.is_begin(word_start, self.document):
+                if self.is_begin(word_start, word, self.document):
                     # Start of a new component
                     bio_label = 'B'
                     self.last_component_start = word_start
