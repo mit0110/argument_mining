@@ -81,20 +81,22 @@ def get_all_documents(annotations_dir, annotators):
 
 def get_annotated_documents(annotations_dir, annotators):
     files = get_filenames_by_document(annotations_dir, annotators)
+    annotations = []
     document_pairs = []
     for value in files.values():
         if len(value) < 2:
             continue
-        annotations = read_parallel_annotations(value.items())
-        for ann1, ann2 in list(itertools.combinations(annotations.keys(), 2)):
-            document_pairs.append((annotations[ann1], annotations[ann2]))
+        annotations.append(read_parallel_annotations(value.items()))
+        for ann1, ann2 in list(itertools.combinations(
+                annotations[-1].keys(), 2)):
+            document_pairs.append((annotations[-1][ann1], annotations[-1][ann2]))
     return document_pairs, annotations
 
 
 def read_parallel_annotations(annotator_filenames):
     annotations = {}
     for name, filename in annotator_filenames:
-        annotations[name] = get_annotation(filename, name) 
+        annotations[name] = get_annotation(filename, name)
     return annotations
 
 
