@@ -56,7 +56,7 @@ class FixedSizeBiLSTM(BiLSTM):
 
                 for feature_name in self.params['featureNames']:
                     instances = pad_sequences(
-                        [numpy.asarray(instance[feature_name]) + 1  # remove 0s
+                        [numpy.asarray(instance[feature_name])
                          for instance in trainMatrix[start:end]])
                     batches[model_name].append(instances)
             yield batches
@@ -69,7 +69,7 @@ class FixedSizeBiLSTM(BiLSTM):
             instances = []
             for feature_name in self.params['featureNames']:
                 input_data = pad_sequences(
-                    [numpy.asarray(instance[feature_name]) + 1  # remove 0s
+                    [numpy.asarray(instance[feature_name])
                      for instance in sentences[start:end]])
                 instances.append(input_data)
 

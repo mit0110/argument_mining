@@ -82,8 +82,6 @@ def main():
             del attention
         else:
             tags = model.tagSentences(data[dataset_name][partition_name])
-        assert (len(data[dataset_name][partition_name][0]['raw_tokens']) ==
-                len(tags[dataset_name][0]))
         true_labels = []
         result = []
 
@@ -92,6 +90,8 @@ def main():
             for token, true_label_id, predicted_label in zip(
                     sentence['raw_tokens'], sentence[args.target_column],
                     sentence_labels):
+                if token == 'PADDING_TOKEN':
+                    continue
                 true_label = label_encoding[true_label_id]
                 true_labels.append(true_label)
                 result.append((token, true_label, predicted_label, idx))

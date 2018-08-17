@@ -23,8 +23,8 @@ do
         --output_dirpath $RESULT_DIRECTORY/${SEPARATION_LEVEL}${RELATIONS}/$EXPERIMENT_DIRECTORY \
         --experiment_name $PARTITION \
 		--char_embedding lstm \
-        --char_embedding_size 64 \
-        --epochs 50 \
+        --char_embedding_size 16 \
+        --epochs 1 \
         --classifier CRF \
         --patience 10 \
         --dropout 0.2 0.2 \
@@ -33,6 +33,7 @@ do
     # Now we need to evaluate the model
     MODEL_NAME=$(compgen -f $RESULT_DIRECTORY/${SEPARATION_LEVEL}${RELATIONS}/$EXPERIMENT_DIRECTORY/$PARTITION*h5)
     echo "********* Evaluating model $MODEL_NAME"
+    # echo "-u experiments/run_BiLSTM_CNN_CRF.py --classifier $MODEL_NAME --dataset $DATASET_NAME --output_dirname $RESULT_DIRECTORY/${SEPARATION_LEVEL}${RELATIONS}/$EXPERIMENT_DIRECTORY --experiment_name $PARTITION"
     python -u experiments/run_BiLSTM_CNN_CRF.py \
         --classifier $MODEL_NAME --dataset $DATASET_NAME \
         --output_dirname $RESULT_DIRECTORY/${SEPARATION_LEVEL}${RELATIONS}/$EXPERIMENT_DIRECTORY \
