@@ -34,6 +34,7 @@ TextChart = class TextChartClass {
     this.fontType = 'sans-serif';
     this.paragraph = 0;
     this.useColor = opts.useColor || false;
+    this.labelColors = opts.labelColors;
   }
 
   /**
@@ -64,6 +65,7 @@ TextChart = class TextChartClass {
       .attr('x', function(d) { return d.x; })
       .attr('y', function(d) { return d.y; })
       .text(function(d) { return d.word; })
+      .attr('text-decoration', function(d) { if (!d.correct) { return 'underline'; } })
       .attr('text-anchor', 'left');
 
     svg.selectAll('text').each(function(d, i) {
@@ -90,7 +92,7 @@ TextChart = class TextChartClass {
     } else {  // Use opacity
       svg.selectAll('rect')
           .attr('opacity', function(d) { return opacityScale(d.attention); })
-          .attr('fill', '#00A1E4');
+          .attr('fill', function(d) { return _chart.labelColors[d.label]; });
     }
   }
 
@@ -137,7 +139,10 @@ TextChart = class TextChartClass {
         index: i, word: word[0],
         x: this.xPosition,
         y: this.yPosition,
-        attention: word[1], sentence: word[2] || 0
+        attention: word[1],
+        sentence: word[2] || 0,
+        label: word[3],
+        correct: word[4],
       });
       // Calculate the next x position
       this.getXPosition(word[0]);
