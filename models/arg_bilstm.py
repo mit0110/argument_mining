@@ -180,21 +180,26 @@ class ArgBiLSTM(FixedSizeBiLSTM):
 
         chars_input = layers.Input(shape=(None, maxCharLen), dtype='int32',
                                    name='char_input')
-        chars = layers.TimeDistributed(
-            layers.Embedding(
-                input_dim=charEmbeddings.shape[0],
-                output_dim=charEmbeddings.shape[1],
-                weights=[charEmbeddings], trainable=True, mask_zero=True),
-            name='char_emd')(chars_input)
 
         # Use LSTM for char embeddings from Lample et al., 2016
         if self.params['charEmbeddings'].lower() == 'lstm':
+            chars = layers.TimeDistributed(
+                layers.Embedding(
+                    input_dim=charEmbeddings.shape[0],
+                    output_dim=charEmbeddings.shape[1],
+                    weights=[charEmbeddings], trainable=True, mask_zero=True),
+                name='char_emd')(chars_input)
             charLSTMSize = self.params['charLSTMSize']
             chars = layers.TimeDistributed(
                 layers.Bidirectional(
                     layers.LSTM(charLSTMSize, return_sequences=False)),
                 name="char_lstm")(chars)
         else:  # Use CNNs for character embeddings from Ma and Hovy, 2016
+            chars = layers.TimeDistributed(
+                layers.Embedding(  # Conv layer does not support masking
+                    input_dim=charEmbeddings.shape[0],
+                    output_dim=charEmbeddings.shape[1], trainable=True,
+                    weights=[charEmbeddings]), name='char_emd')(chars_input)
             charFilterSize = self.params['charFilterSize']
             charFilterLength = self.params['charFilterLength']
             chars = layers.TimeDistributed(
