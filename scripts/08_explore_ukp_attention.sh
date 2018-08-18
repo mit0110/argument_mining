@@ -6,7 +6,7 @@ RESULT_DIRECTORY="../results/ukpnets"
 EXPERIMENT_DIRECTORY="ongoing-"$DATE
 RELATIONS=""
 SEPARATION_LEVEL="paragraph"
-DATA_DIR="../data/echr/annotation/for_training"
+DATA_DIR="../data/echr/annotation/for_exploration"
 echo "******** Starting experiment $DATE"
 echo "******** Using relation suffix $RELATIONS"
 echo "******** Using attention!"
@@ -26,14 +26,14 @@ do
         --attention_model $ATTENTION_MODEL \
         --output_dirpath $RESULT_DIRECTORY/${SEPARATION_LEVEL}${RELATIONS}/$EXPERIMENT_DIRECTORY \
         --experiment_name $PARTITION \
-        --char_embedding lstm \
-        --char_embedding_size 16 \
+        --char_embedding $0 \
+        --char_embedding_size $1 \
         --epochs 50 \
-        --classifier CRF \
+        --classifier $2 \
         --patience 10 \
-        --dropout 0.2 0.2 \
-        --batch_size 100 \
-        --num_units 50 50
+        --dropout $3 $3 \
+        --batch_size $4 \
+        --num_units $5 $5
     # Now we need to evaluate the model
     MODEL_NAME=$(compgen -f $RESULT_DIRECTORY/${SEPARATION_LEVEL}${RELATIONS}/$EXPERIMENT_DIRECTORY/$PARTITION*h5)
     echo "********* Evaluating model $MODEL_NAME"
