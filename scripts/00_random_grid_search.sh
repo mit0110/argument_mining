@@ -1,6 +1,6 @@
 for i in 1 2 3 4 5; do
     echo "******************* EXPLORING SETTING $i ***************************"
-    CHAR_EMB=(lstm rnn)
+    CHAR_EMB=(lstm cnn)
     rand_char_emb=${CHAR_EMB[$[$RANDOM % ${#CHAR_EMB[@]}]]}
     echo "Char embedding type" $rand_char_emb
 
@@ -24,6 +24,6 @@ for i in 1 2 3 4 5; do
     rand_lstm_units=${LSTM_UNITS[$[$RANDOM % ${#LSTM_UNITS[@]}]]}
     echo "LSTM units" $rand_lstm_units
 
-    bash 08_explore_ukp_attention.sh $rand_char_emb $rand_char_emb_size \
+    bash scripts/08_explore_ukp_attention.sh $rand_char_emb $rand_char_emb_size \
         $rand_classifier $rand_dropout $rand_batch_size $rand_lstm_units
 done
