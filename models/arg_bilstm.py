@@ -131,6 +131,7 @@ class ArgBiLSTM(FixedSizeBiLSTM):
             input_dim=self.embeddings.shape[0],
             output_dim=self.embeddings.shape[1],
             weights=[self.embeddings], trainable=False,
+            mask_zero=True,
             name='word_embeddings')(tokens_input)
 
         inputNodes = [tokens_input]
@@ -145,6 +146,7 @@ class ArgBiLSTM(FixedSizeBiLSTM):
             feature_embedding = layers.Embedding(
                 input_dim=len(self.mappings[featureName]),
                 output_dim=self.params['addFeatureDimensions'],
+                mask_zero=True,
                 name=featureName+'_emebddings')(feature_input)
 
             inputNodes.append(feature_input)

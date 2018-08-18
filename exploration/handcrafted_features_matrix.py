@@ -1,10 +1,11 @@
 """Builds a matrix with the handcrafted features in preprocess.conll_feature_extractor.
 
 Usage:
-   handcrafted_features_matrix.py --input_filename=<filename>
+   handcrafted_features_matrix.py --input_filename=<in_filename> --output_filename=<out_filename>
 
 Options:
-    --input_filename=<filename>      The path to directory to read the dataset.
+    --input_filename=<in_filename>      The path to directory to read the dataset.
+    --output_filename=<out_filename>      The path to file to write the matrixes.
 """
 
 import os
@@ -24,15 +25,15 @@ def main():
 
     transformer = conll_feature_extractor.ConllFeatureExtractor(
         use_structural=True,
-        # use_syntactic=True,
+        use_syntactic=True,
         use_lexical=True
     )
     # Extract instances and labels. Each instance is a sentence, represented as
-    # a list of feature dictionaries for each work. Labels are represented as
-    # a list of word labels.
+    # a list of feature dictionaries for each work. 
     instances = transformer.get_feature_dict(documents)
-    labels = conll_feature_extractor.get_labels_from_documents(documents)
 
+    utils.pickle_to_file(instances, args['output_filename'])
+    
     print('All operations completed')
 
 

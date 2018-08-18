@@ -24,11 +24,11 @@ do
         --experiment_name $PARTITION \
 		--char_embedding lstm \
         --char_embedding_size 16 \
-        --epochs 1 \
+        --epochs 50 \
         --classifier CRF \
         --patience 10 \
         --dropout 0.2 0.2 \
-        --batch_size 100 \
+        --batch_size 32 \
         --num_units 50 50
     # Now we need to evaluate the model
     MODEL_NAME=$(compgen -f $RESULT_DIRECTORY/${SEPARATION_LEVEL}${RELATIONS}/$EXPERIMENT_DIRECTORY/$PARTITION*h5)

@@ -105,7 +105,7 @@ def main():
     if attention_model is None:
         model = ArgBiLSTM(classifier_params)
     else:
-        model = AttArgBiLSTM(classifier_params)
+        model = attention_model(classifier_params)
     model.setMappings(mappings, embeddings)
     model.setDataset(datasets, data)
     # Path to store performance scores for dev / test
