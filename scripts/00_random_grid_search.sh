@@ -1,6 +1,6 @@
 for i in 1 2 3 4 5; do
     echo "******************* EXPLORING SETTING $i ***************************"
-    CHAR_EMB=(lstm cnn)
+    CHAR_EMB=(lstm cnn None)
     rand_char_emb=${CHAR_EMB[$[$RANDOM % ${#CHAR_EMB[@]}]]}
     echo "Char embedding type" $rand_char_emb
 
@@ -20,7 +20,7 @@ for i in 1 2 3 4 5; do
     rand_batch_size=${BATCH_SIZE[$[$RANDOM % ${#BATCH_SIZE[@]}]]}
     echo "Batch size" $rand_batch_size
 
-    LSTM_UNITS=(30 50 50 100 200)
+    LSTM_UNITS=(30 50 100 200)
     rand_lstm_units=${LSTM_UNITS[$[$RANDOM % ${#LSTM_UNITS[@]}]]}
     echo "LSTM units" $rand_lstm_units
 

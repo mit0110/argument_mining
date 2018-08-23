@@ -26,7 +26,7 @@ do
         --attention_model $ATTENTION_MODEL \
         --output_dirpath $RESULT_DIRECTORY/${SEPARATION_LEVEL}${RELATIONS}/$EXPERIMENT_DIRECTORY \
         --experiment_name $PARTITION \
-        --char_embedding lstm \
+        --char_embedding cnn \
         --char_embedding_size 16 \
         --epochs 50 \
         --classifier CRF \
