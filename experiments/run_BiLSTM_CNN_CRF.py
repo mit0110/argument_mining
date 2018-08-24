@@ -13,11 +13,11 @@ import utils
 
 from sklearn import metrics
 from models.arg_bilstm import ArgBiLSTM
-from models.att_arg_bilstm import TimePreAttArgBiLSTM, TimePostAttArgBiLSTM
+from models.att_arg_bilstm import TimePreAttArgBiLSTM, FeaturePreAttArgBiLSTM
 
 ATTENTION_MODELS = {
     'time_pre': TimePreAttArgBiLSTM,
-    'time_post': TimePostAttArgBiLSTM
+    'feature_pre': FeaturePreAttArgBiLSTM
 }
 
 def read_args():

@@ -5,6 +5,7 @@ import numpy
 import keras.backend as K
 from keras import optimizers, layers
 from keras.models import Model
+from keras.preprocessing.sequence import pad_sequences
 
 from models.arg_bilstm import ArgBiLSTM
 
@@ -55,35 +56,43 @@ class TimePreAttArgBiLSTM(ArgBiLSTM):
         # The attention output is (batch_size, timesteps, features)
         return attention_model.predict(input_)
 
-    def model_predict(self, model, sentences, return_attention=False):
+    def model_predict(self, model, sentences, return_attention=False,
+                      batch_size=32):
         """Model probability distribution over set of labels for sentences.
 
         Args:
             model: a Keras model.
         """
-        pred_labels = [None]*len(sentences)
-        att_scores = [None]*len(sentences)
+        pred_labels = []
+        att_scores = []
         sentenceLengths = self.getSentenceLengths(sentences)
 
-        for indices in sentenceLengths.values():
-            nnInput = []
-            for featureName in self.params['featureNames']:
-                inputData = numpy.asarray([sentences[idx][featureName]
-                                           for idx in indices])
-                nnInput.append(inputData)
+        for start in range(0, len(sentences), batch_size):
+            end = start + batch_size
+            instances = []
+            for feature_name in self.params['featureNames']:
+                input_data = pad_sequences(
+                    [numpy.asarray(instance[feature_name])
+                     for instance in sentences[start:end]],
+                    self.max_sentece_length)
+                instances.append(input_data)
 
             if not return_attention:
-                predictions = model.predict(nnInput, verbose=False)
+                predictions = model.predict(instances, verbose=False)
             else:
                 attention, predictions = self.label_and_attention(
-                    model, nnInput)
+                    model, instances)
             predictions = predictions.argmax(axis=-1) #Predict classes
 
-            # We add the predictions in the correct place
-            for prediction_index, sequence_index in enumerate(indices):
-                pred_labels[sequence_index] = predictions[prediction_index]
+            # We need to "unpad" the predicted labels. We use the
+            # lenght of any random feature in the sentence. (all features
+            # should be valid for a sentence.
+            for index, (pred, sentence) in enumerate(
+                    zip(predictions, sentences[start:end])):
+                sentence_len = len(sentence[feature_name])
+                pred_labels.append(pred[-sentence_len:])
                 if return_attention:
-                    att_scores[sequence_index] = attention[prediction_index, :]
+                    att_scores.append(attention[index, -sentence_len:])
 
         return numpy.asarray(pred_labels), numpy.asarray(att_scores)
 
@@ -130,70 +139,83 @@ class TimePreAttArgBiLSTM(ArgBiLSTM):
         return labels
 
 
-class TimePostAttArgBiLSTM(ArgBiLSTM):
+class FeaturePreAttArgBiLSTM(TimePreAttArgBiLSTM):
 
-    def __init__(self, params=None):
-        super(TimePostAttArgBiLSTM, self).__init__(params)
-        # In this class we need to know before hand the size of the sequences,
-        # and they must be all equal, to apply the attention.
-        # TODO change here
-        self.max_sentece_length = defaultdict(None)
+    def saveModel(self, modelName, epoch, dev_score, test_score):
+        self.mappings['max_sentece_length'] = self.max_sentece_length
+        super(FeaturePreAttArgBiLSTM, self).saveModel(modelName, epoch,
+                                                      dev_score, test_score)
 
-    @classmethod
-    def loadModel(cls, modelPath):
-        # TODO add one more parameter saved, which is the size of the sequence
-        model = load_model(modelPath, custom_objects=create_custom_objects())
-        with h5py.File(modelPath, 'r') as f:
-            mappings = json.loads(f.attrs['mappings'])
-            params = json.loads(f.attrs['params'])
-            modelName = f.attrs['modelName']
-            labelKey = f.attrs['labelKey']
+    def setMappings(self, mappings, embeddings):
+        super(FeaturePreAttArgBiLSTM, self).setMappings(mappings, embeddings)
+        self.max_sentece_length = self.mappings.get('max_sentece_length')
 
-        bilstm = cls(params)
-        bilstm.setMappings(mappings, None)
-        bilstm.models = {modelName: model}
-        bilstm.labelKeys = {modelName: labelKey}
-        bilstm.idx2Labels = {}
-        bilstm.idx2Labels[modelName] = {
-            v: k for k, v in bilstm.mappings[labelKey].items()}
-        return bilstm
+    def setDataset(self, datasets, data):
+        super(FeaturePreAttArgBiLSTM, self).setDataset(datasets, data)
+        dataset_name = [x for x in self.datasets.keys()][0]
+        self.max_sentece_length = min(max([
+            len(sentence['tokens'])
+            for sentence in self.data[dataset_name]['trainMatrix']]), 400)
+        print('Max sentence lenght {}'.format(self.max_sentece_length))
 
-    def minibatch_iterate_dataset(self, batch_size=32):
-        """Create mini-batches with the same number of timesteps.
+    def buildModel(self):
+        if (not hasattr(self, 'dataset') or self.dataset is None) and (
+            self.max_sentece_length is None):
+            raise ValueError('Dataset must be set before build.')
+        super(FeaturePreAttArgBiLSTM, self).buildModel()
 
-        Sentences and mini-batch chunks are shuffled and used to the
-        train the model."""
+    def featuresToMerge(self):
+        """Adds the input layers."""
+        tokens_input = layers.Input(shape=(self.max_sentece_length,),
+                                    dtype='int32', name='words_input')
+        tokens = layers.Embedding(
+            input_dim=self.embeddings.shape[0],
+            output_dim=self.embeddings.shape[1],
+            weights=[self.embeddings], trainable=False,
+            mask_zero=False,  # The attention should deal with this
+            name='word_embeddings')(tokens_input)
 
-        for model_name in self.modelNames:
-            if not model_name in self.max_sentece_length:
-                # Calculate max_sentece_length
-                train_data = self.data[model_name]['trainMatrix']
-                self.max_sentece_length[model_name] = max([len(x['tokens'])
-                                                          for x in train_data])
+        inputNodes = [tokens_input]
+        mergeInputLayers = [tokens]
 
-            # Shuffle the order of the examples
-            numpy.random.shuffle(self.data[model_name]['trainMatrix'])
+        for featureName in self.params['featureNames']:
+            if featureName == 'tokens' or featureName == 'characters':
+                continue
 
-        # Iterate over the examples
-        batches = {}
-        training_examples = len(self.data[model_name]['trainMatrix'])
-        for start in range(0, training_examples, batch_size):
-            batches.clear()
-            end = start + batch_size
+            feature_input = layers.Input(
+                shape=(self.max_sentece_length,), dtype='int32',
+                name=featureName+'_input')
+            feature_embedding = layers.Embedding(
+                input_dim=len(self.mappings[featureName]),
+                output_dim=self.params['addFeatureDimensions'],
+                mask_zero=False,  # The attention should deal with this
+                name=featureName+'_emebddings')(feature_input)
 
-            for model_name in self.modelNames:
-                sentence_size = self.max_sentece_length[model_name]
-                trainMatrix = self.data[model_name]['trainMatrix']
-                label_name = self.labelKeys[model_name]
-                n_class_labels = len(self.mappings[self.labelKeys[model_name]])
-                labels = pad_sequences(
-                    [example[label_name] for example in trainMatrix[start:end]],
-                     sentence_size)
-                batches[model_name] = [numpy.expand_dims(labels, -1)]
+            inputNodes.append(feature_input)
+            mergeInputLayers.append(feature_embedding)
+        return inputNodes, mergeInputLayers
 
-                for feature_name in self.params['featureNames']:
-                    inputData = pad_sequences(
-                        [numpy.asarray(instance[feature_name]) + 1  # remove 0s
-                         for instance in trainMatrix[start:end]], sentence_size)
-                    batches[model_name].append(inputData)
-            yield batches
+    def addPreAttentionLayer(self, merged_input):
+        """Add attention mechanisms to the tensor merged_input.
+
+        Args:
+            merged_input: 3-dimensional Tensor, where the first
+            dimension corresponds to the batch size, the second to the sequence
+            timesteps and the last one to the concatenation of features.
+
+        Retruns:
+            3-dimensional Tensor of the same dimension as merged_input
+        """
+        feature_vector_size = K.int_shape(merged_input)[-1]
+        merged_input = layers.Permute((2, 1))(merged_input)
+        att_layer = layers.TimeDistributed(
+            layers.Dense(self.max_sentece_length, activation='tanh'),
+            name='attention_matrix_score')(merged_input)
+        # Calculate a single score for each timestep
+        att_layer = layers.Lambda(lambda x: K.mean(x, axis=1),
+                                  name='attention_vector_score')(att_layer)
+        # Reshape to obtain the same shape as input
+        att_layer = layers.RepeatVector(feature_vector_size)(att_layer)
+        merged_input = layers.multiply([att_layer, merged_input])
+        merged_input = layers.Permute((2, 1))(merged_input)
+        return merged_input

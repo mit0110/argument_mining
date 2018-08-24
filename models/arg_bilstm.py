@@ -23,6 +23,22 @@ from collections import defaultdict
 class FixedSizeBiLSTM(BiLSTM):
     """BiLSTM model with a fixed number of timesteps for sequences."""
 
+    def __init__(self, params=None):
+        super(FixedSizeBiLSTM, self).__init__(params)
+        self.max_sentece_length = None  # If this is none, the longest sentence
+        # in the batch is used
+
+    def add_padded_sentences(self, train_matrix, label_name):
+        labels = pad_sequences(
+            [example[label_name] for example in train_matrix],
+            self.max_sentece_length)
+        batches = [numpy.expand_dims(labels, -1)]
+        for feature_name in self.params['featureNames']:
+            batches.append(pad_sequences([
+                numpy.asarray(instance[feature_name])
+                for instance in train_matrix], self.max_sentece_length))
+        return batches
+
     def minibatch_iterate_dataset(self, batch_size=32, partition='trainMatrix'):
         """Create mini-batches with the same number of timesteps.
 
@@ -49,16 +65,8 @@ class FixedSizeBiLSTM(BiLSTM):
             for model_name in self.modelNames:
                 trainMatrix = self.data[model_name][partition]
                 label_name = self.labelKeys[model_name]
-                n_class_labels = len(self.mappings[self.labelKeys[model_name]])
-                labels = pad_sequences(
-                    [example[label_name] for example in trainMatrix[start:end]])
-                batches[model_name] = [numpy.expand_dims(labels, -1)]
-
-                for feature_name in self.params['featureNames']:
-                    instances = pad_sequences(
-                        [numpy.asarray(instance[feature_name])
-                         for instance in trainMatrix[start:end]])
-                    batches[model_name].append(instances)
+                batches[model_name] = self.add_padded_sentences(
+                    trainMatrix[start:end], label_name)
             yield batches
 
     def predictLabels(self, model, sentences, batch_size=64):
@@ -70,7 +78,8 @@ class FixedSizeBiLSTM(BiLSTM):
             for feature_name in self.params['featureNames']:
                 input_data = pad_sequences(
                     [numpy.asarray(instance[feature_name])
-                     for instance in sentences[start:end]])
+                     for instance in sentences[start:end]],
+                    self.max_sentece_length)
                 instances.append(input_data)
 
             predictions = model.predict(instances, verbose=False)
