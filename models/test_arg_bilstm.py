@@ -4,7 +4,7 @@ import numpy
 import unittest
 
 from models.arg_bilstm import ArgBiLSTM
-from models.att_arg_bilstm import TimePreAttArgBiLSTM
+from models.att_arg_bilstm import TimePreAttArgBiLSTM, FeaturePreAttArgBiLSTM
 
 
 class ArgBiLSTMTest(unittest.TestCase):
@@ -92,7 +92,6 @@ class ArgBiLSTMTest(unittest.TestCase):
                              numpy.asarray(predicted).shape)
 
 
-
 class AttArgBiLSTMTest(ArgBiLSTMTest):
     MODEL = TimePreAttArgBiLSTM
 
@@ -114,6 +113,10 @@ class AttArgBiLSTMTest(ArgBiLSTMTest):
                 attention['name'], self.data['name']['trainMatrix']):
             no_pad_tokens = len([x for x in sentence['tokens'] if x != 0])
             self.assertEqual(no_pad_tokens, len(sentence_attention))
+
+
+class FeaturePreAttArgBiLSTMTest(AttArgBiLSTMTest):
+    MODEL = FeaturePreAttArgBiLSTM
 
 
 if __name__ == '__main__':
