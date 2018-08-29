@@ -27,13 +27,13 @@ do
         --output_dirpath $RESULT_DIRECTORY/${SEPARATION_LEVEL}${RELATIONS}/$EXPERIMENT_DIRECTORY \
         --experiment_name $PARTITION \
         --char_embedding cnn \
-        --char_embedding_size 16 \
+        --char_embedding_size 32 \
         --epochs 50 \
-        --classifier CRF \
+        --classifier Softmax \
         --patience 10 \
-        --dropout 0.2 0.2 \
-        --batch_size 100 \
-        --num_units 50 50
+        --dropout 0.1 0.1 \
+        --batch_size 30 \
+        --num_units 200 200
     # Now we need to evaluate the model
     MODEL_NAME=$(compgen -f $RESULT_DIRECTORY/${SEPARATION_LEVEL}${RELATIONS}/$EXPERIMENT_DIRECTORY/$PARTITION*h5)
     echo "********* Evaluating model $MODEL_NAME"

@@ -1,6 +1,6 @@
 for i in 1 2 3 4 5; do
     echo "******************* EXPLORING SETTING $i ***************************"
-    CHAR_EMB=(lstm cnn None)
+    CHAR_EMB=(lstm None)
     rand_char_emb=${CHAR_EMB[$[$RANDOM % ${#CHAR_EMB[@]}]]}
     echo "Char embedding type" $rand_char_emb
 
