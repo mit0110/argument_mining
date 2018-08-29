@@ -162,7 +162,7 @@ class ArgBiLSTM(FixedSizeBiLSTM):
             mergeInputLayers.append(feature_embedding)
         return inputNodes, mergeInputLayers
 
-    def addCharEmbeddings(self, inputNodes, mergeInputLayers):
+    def createCharEmbeddings(self):
         # :: Character Embeddings ::
         logging.info("Pad words to uniform length for characters embeddings")
         all_sentences = []
@@ -185,11 +185,14 @@ class ArgBiLSTM(FixedSizeBiLSTM):
             charEmbeddings.append(vector)
 
         charEmbeddings[0] = numpy.zeros(charEmbeddingsSize) #Zero padding
-        charEmbeddings = numpy.asarray(charEmbeddings)
+        return numpy.asarray(charEmbeddings)
 
-        chars_input = layers.Input(shape=(None, maxCharLen), dtype='int32',
-                                   name='char_input')
+    def addCharInput(self):
+        return layers.Input(shape=(None, self.maxCharLen), dtype='int32',
+                            name='char_input')
 
+    def addCharEmbeddingLayers(self, inputNodes, mergeInputLayers,
+                               chars_input, charEmbeddings):
         # Use LSTM for char embeddings from Lample et al., 2016
         if self.params['charEmbeddings'].lower() == 'lstm':
             chars = layers.TimeDistributed(
@@ -365,7 +368,10 @@ class ArgBiLSTM(FixedSizeBiLSTM):
         inputNodes, mergeInputLayers = self.featuresToMerge()
         if self.params['charEmbeddings'] not in [
                 None, "None", "none", False, "False", "false"]:
-            self.addCharEmbeddings(inputNodes, mergeInputLayers)
+            char_embeddings = self.createCharEmbeddings()
+            char_input = self.addCharInput()
+            self.addCharEmbeddingLayers(inputNodes, mergeInputLayers,
+                                        createCharEmbeddings, char_embeddings)
 
         self.handleTasks(inputNodes, mergeInputLayers)
 

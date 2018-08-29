@@ -9,6 +9,7 @@ from keras.preprocessing.sequence import pad_sequences
 
 from models.arg_bilstm import ArgBiLSTM
 
+MAX_SENTENCE_LENGHT = 400
 
 class TimePreAttArgBiLSTM(ArgBiLSTM):
     """Bidirectional RNN with an attention mechanism.
@@ -155,7 +156,8 @@ class FeaturePreAttArgBiLSTM(TimePreAttArgBiLSTM):
         dataset_name = [x for x in self.datasets.keys()][0]
         self.max_sentece_length = min(max([
             len(sentence['tokens'])
-            for sentence in self.data[dataset_name]['trainMatrix']]), 400)
+            for sentence in self.data[dataset_name]['trainMatrix']]),
+            MAX_SENTENCE_LENGHT)
         print('Max sentence lenght {}'.format(self.max_sentece_length))
 
     def buildModel(self):
@@ -172,7 +174,7 @@ class FeaturePreAttArgBiLSTM(TimePreAttArgBiLSTM):
             input_dim=self.embeddings.shape[0],
             output_dim=self.embeddings.shape[1],
             weights=[self.embeddings], trainable=False,
-            mask_zero=True,
+            mask_zero=False,  # The attention should deal with this
             name='word_embeddings')(tokens_input)
 
         inputNodes = [tokens_input]
@@ -188,64 +190,17 @@ class FeaturePreAttArgBiLSTM(TimePreAttArgBiLSTM):
             feature_embedding = layers.Embedding(
                 input_dim=len(self.mappings[featureName]),
                 output_dim=self.params['addFeatureDimensions'],
-                mask_zero=True,
+                mask_zero=False,  # The attention should deal with this
                 name=featureName+'_emebddings')(feature_input)
 
             inputNodes.append(feature_input)
             mergeInputLayers.append(feature_embedding)
         return inputNodes, mergeInputLayers
 
-    def addCharEmbeddings(self, inputNodes, mergeInputLayers):
-        """Only LSTM character embedding are supported.
-
-        Convolutional layers do not support masking."""
-        # :: Character Embeddings ::
-        logging.info("Pad words to uniform length for characters embeddings")
-        all_sentences = []
-        for dataset in self.data.values():
-            for data in [dataset['trainMatrix'], dataset['devMatrix'],
-                         dataset['testMatrix']]:
-                for sentence in data:
-                    all_sentences.append(sentence)
-
-        self.padCharacters(all_sentences)
-        logging.info("Words padded to %d characters" % (self.maxCharLen))
-
-        charset = self.mappings['characters']
-        charEmbeddingsSize = self.params['charEmbeddingsSize']
-        maxCharLen = self.maxCharLen
-        charEmbeddings= []
-        for _ in charset:
-            limit = math.sqrt(3.0/charEmbeddingsSize)
-            vector = numpy.random.uniform(-limit, limit, charEmbeddingsSize)
-            charEmbeddings.append(vector)
-
-        charEmbeddings[0] = numpy.zeros(charEmbeddingsSize) #Zero padding
-        charEmbeddings = numpy.asarray(charEmbeddings)
-
-        chars_input = layers.Input(
-            shape=(self.max_sentece_length, maxCharLen), dtype='int32',
+    def addCharInput(self):
+        return layers.Input(
+            shape=(self.max_sentece_length, self.maxCharLen), dtype='int32',
             name='char_input')
-
-        # Use LSTM for char embeddings from Lample et al., 2016
-        if self.params['charEmbeddings'].lower() == 'lstm':
-            chars = layers.TimeDistributed(
-                layers.Embedding(
-                    input_dim=charEmbeddings.shape[0],
-                    output_dim=charEmbeddings.shape[1],
-                    weights=[charEmbeddings], trainable=True, mask_zero=True),
-                name='char_emd')(chars_input)
-            charLSTMSize = self.params['charLSTMSize']
-            chars = layers.TimeDistributed(
-                layers.Bidirectional(
-                    layers.LSTM(charLSTMSize, return_sequences=False)),
-                name="char_lstm")(chars)
-        else:  # Use CNNs for character embeddings from Ma and Hovy, 2016
-            raise NotImplementedError('CNN character embeddings not supported')
-
-        mergeInputLayers.append(chars)
-        inputNodes.append(chars_input)
-        self.params['featureNames'].append('characters')
 
     def addPreAttentionLayer(self, merged_input):
         """Add attention mechanisms to the tensor merged_input.
@@ -270,4 +225,9 @@ class FeaturePreAttArgBiLSTM(TimePreAttArgBiLSTM):
         att_layer = layers.RepeatVector(feature_vector_size)(att_layer)
         merged_input = layers.multiply([att_layer, merged_input])
         merged_input = layers.Permute((2, 1))(merged_input)
+
+        # We re add the mask layer after the attention is applied.
+        # Of course we have the risk of masking elements that were zeroed
+        # after the application of the attention scores.
+        merged_input = layers.Masking(mask_value=0.0)(merged_input)
         return merged_input
