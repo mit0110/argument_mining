@@ -202,6 +202,39 @@ class FeaturePreAttArgBiLSTM(TimePreAttArgBiLSTM):
             shape=(self.max_sentece_length, self.maxCharLen), dtype='int32',
             name='char_input')
 
+    def addCharEmbeddingLayers(self, inputNodes, mergeInputLayers,
+                               chars_input, charEmbeddings):
+        # Use LSTM for char embeddings from Lample et al., 2016
+        if self.params['charEmbeddings'].lower() == 'lstm':
+            chars = layers.TimeDistributed(
+                layers.Embedding(
+                    input_dim=charEmbeddings.shape[0],
+                    output_dim=charEmbeddings.shape[1],
+                    weights=[charEmbeddings], trainable=True, mask_zero=False),
+                name='char_emd')(chars_input)
+            charLSTMSize = self.params['charLSTMSize']
+            chars = layers.TimeDistributed(
+                layers.Bidirectional(
+                    layers.LSTM(charLSTMSize, return_sequences=False)),
+                name="char_lstm")(chars)
+        else:  # Use CNNs for character embeddings from Ma and Hovy, 2016
+            chars = layers.TimeDistributed(
+                layers.Embedding(  # Conv layer does not support masking
+                    input_dim=charEmbeddings.shape[0],
+                    output_dim=charEmbeddings.shape[1], trainable=True,
+                    weights=[charEmbeddings]), name='char_emd')(chars_input)
+            charFilterSize = self.params['charFilterSize']
+            charFilterLength = self.params['charFilterLength']
+            chars = layers.TimeDistributed(
+                layers.Conv1D(charFilterSize, charFilterLength, padding='same'),
+                name="char_cnn")(chars)
+            chars = layers.TimeDistributed(layers.GlobalMaxPooling1D(),
+                                           name="char_pooling")(chars)
+
+        mergeInputLayers.append(chars)
+        inputNodes.append(chars_input)
+        self.params['featureNames'].append('characters')
+
     def addPreAttentionLayer(self, merged_input):
         """Add attention mechanisms to the tensor merged_input.
 
@@ -216,7 +249,7 @@ class FeaturePreAttArgBiLSTM(TimePreAttArgBiLSTM):
         feature_vector_size = K.int_shape(merged_input)[-1]
         merged_input = layers.Permute((2, 1))(merged_input)
         att_layer = layers.TimeDistributed(
-            layers.Dense(self.max_sentece_length, activation='tanh'),
+            layers.Dense(self.max_sentece_length, activation=None),
             name='attention_matrix_score')(merged_input)
         # Calculate a single score for each timestep
         att_layer = layers.Lambda(lambda x: K.mean(x, axis=1),
@@ -231,3 +264,4 @@ class FeaturePreAttArgBiLSTM(TimePreAttArgBiLSTM):
         # after the application of the attention scores.
         merged_input = layers.Masking(mask_value=0.0)(merged_input)
         return merged_input
+
