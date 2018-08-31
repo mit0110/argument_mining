@@ -120,12 +120,23 @@ class TimePreAttArgBiLSTM(ArgBiLSTM):
             pred_labels = []
             att_scores = []
             # Skip padding tokens
-            for index, sentence in enumerate(sentences):
+            for index, (padded_pred, sentence) in enumerate(zip(
+                    padded_pred_labels, sentences)):
                 no_pad_tokens = numpy.where(numpy.asarray(
                     sentence['tokens']))[0]
-                pred_labels.append(padded_pred_labels[index][no_pad_tokens])
-                if return_attention:
-                    att_scores.append(padded_att_scores[index][no_pad_tokens])
+                if no_pad_tokens.max() > padded_pred.shape[0]:
+                    # The predicted sequence is shorter (it has been cut)
+                    missing = no_pad_tokens.max() - padded_pred.shape[0]
+                    pred_labels.append(numpy.pad(padded_pred, (0, missing),
+                                                 'constant'))
+                    if return_attention:
+                        att_scores.append(numpy.pad(
+                            padded_att_scores[index], (0, missing), 'constant'))
+                else:
+                    pred_labels.append(padded_pred[no_pad_tokens])
+                    if return_attention:
+                        att_scores.append(
+                            padded_att_scores[index][no_pad_tokens])
 
             attention[model_name] = att_scores
             if not translate_labels:
