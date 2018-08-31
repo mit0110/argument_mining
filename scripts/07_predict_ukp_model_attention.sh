@@ -2,13 +2,13 @@
 # Replace EXPERIMENT_DIRECTORY with the name of the model.
 
 RESULT_DIRECTORY="../results/ukpnets"
-EXPERIMENT_DIRECTORY="18-08-17-20-19"
+EXPERIMENT_DIRECTORY="18-08-30-03-41"
 RELATIONS=""
 SEPARATION_LEVEL="paragraph"
-DATA_DIR="../data/echr/annotation/for_training"
+DATA_DIR="../data/echr/annotation/for_exploration"
 echo "******** Starting classification with modell $EXPERIMENT_DIRECTORY"
 
-ATTENTION_MODEL="time_pre"
+ATTENTION_MODEL="feature_pre"
 
 for PARTITION_DIR in $(compgen -f $DATA_DIR/partition)
 do

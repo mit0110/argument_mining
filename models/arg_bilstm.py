@@ -71,7 +71,6 @@ class FixedSizeBiLSTM(BiLSTM):
 
     def predictLabels(self, model, sentences, batch_size=64):
         pred_labels = []
-
         for start in range(0, len(sentences), batch_size):
             end = start + batch_size
             instances = []
@@ -85,11 +84,14 @@ class FixedSizeBiLSTM(BiLSTM):
             predictions = model.predict(instances, verbose=False)
             predictions = predictions.argmax(axis=-1) #Predict classes
             # We need to "unpad" the predicted labels. We use the
-            # lenght of any random feature in the sentence. (all features
-            # should be valid for a sentence.
-            pred_labels.extend([
-                pred[-len(sentence[feature_name]):]
-                for pred, sentence in zip(predictions, sentences[start:end])])
+            # lenght of any random feature in the sentence. 
+            for pred, sentence in zip(predictions, sentences[start:end]):
+                sentence_len = len(sentence['tokens'])
+                if sentence_len > pred.shape[0]:
+                    pred_labels.append(numpy.pad(
+                        pred, (0, sentence_len - pred.shape[0]), 'constant'))
+                else:
+                    pred_labels.append(pred[-sentence_len:])
 
         return pred_labels
 
