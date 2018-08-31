@@ -11,7 +11,7 @@ echo "******** Starting experiment $DATE"
 echo "******** Using relation suffix $RELATIONS"
 echo "******** Using attention!"
 
-ATTENTION_MODEL="feature_pre"
+ATTENTION_MODEL="time_pre"
 
 mkdir $RESULT_DIRECTORY/${SEPARATION_LEVEL}${RELATIONS}/
 mkdir $RESULT_DIRECTORY/${SEPARATION_LEVEL}${RELATIONS}/$EXPERIMENT_DIRECTORY

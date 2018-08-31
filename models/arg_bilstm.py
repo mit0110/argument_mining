@@ -371,7 +371,7 @@ class ArgBiLSTM(FixedSizeBiLSTM):
             char_embeddings = self.createCharEmbeddings()
             char_input = self.addCharInput()
             self.addCharEmbeddingLayers(inputNodes, mergeInputLayers,
-                                        createCharEmbeddings, char_embeddings)
+                                        char_input, char_embeddings)
 
         self.handleTasks(inputNodes, mergeInputLayers)
 
