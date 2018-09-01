@@ -260,7 +260,7 @@ class FeaturePreAttArgBiLSTM(TimePreAttArgBiLSTM):
         feature_vector_size = K.int_shape(merged_input)[-1]
         merged_input = layers.Permute((2, 1))(merged_input)
         att_layer = layers.TimeDistributed(
-            layers.Dense(self.max_sentece_length, activation=None),
+            layers.Dense(self.max_sentece_length, activation='tanh'),
             name='attention_matrix_score')(merged_input)
         # Calculate a single score for each timestep
         att_layer = layers.Lambda(lambda x: K.mean(x, axis=1),
