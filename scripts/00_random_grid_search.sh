@@ -12,6 +12,10 @@ for i in 1 2 3 4 5; do
     rand_classifier=${CLASSIFIER[$[$RANDOM % ${#CLASSIFIER[@]}]]}
     echo "Classifier" $rand_classifier
 
+    LSTM_UNITS=(30 50 100 200)
+    rand_lstm_units=${LSTM_UNITS[$[$RANDOM % ${#LSTM_UNITS[@]}]]}
+    echo "LSTM units" $rand_lstm_units
+
     DROPOUT=(0.1 0.2 0.3 0.4 0.5)
     rand_dropout=${DROPOUT[$[$RANDOM % ${#DROPOUT[@]}]]}
     echo "Dropout" $rand_dropout
@@ -19,10 +23,6 @@ for i in 1 2 3 4 5; do
     BATCH_SIZE=(30 50 50 100 200)
     rand_batch_size=${BATCH_SIZE[$[$RANDOM % ${#BATCH_SIZE[@]}]]}
     echo "Batch size" $rand_batch_size
-
-    LSTM_UNITS=(30 50 100 200)
-    rand_lstm_units=${LSTM_UNITS[$[$RANDOM % ${#LSTM_UNITS[@]}]]}
-    echo "LSTM units" $rand_lstm_units
 
     bash scripts/08_explore_ukp_attention.sh $rand_char_emb $rand_char_emb_size \
         $rand_classifier $rand_dropout $rand_batch_size $rand_lstm_units
