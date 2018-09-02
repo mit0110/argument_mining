@@ -28,6 +28,8 @@ class TimePreAttArgBiLSTM(ArgBiLSTM):
             3-dimensional Tensor of the same dimension as merged_input
         """
         activation = self.params.get('attentionActivation', None)
+        if activation == 'None':
+            activation = None
         feature_vector_size = K.int_shape(merged_input)[-1]
         att_layer = layers.TimeDistributed(
             layers.Dense(feature_vector_size, activation=activation),
@@ -259,6 +261,8 @@ class FeaturePreAttArgBiLSTM(TimePreAttArgBiLSTM):
             3-dimensional Tensor of the same dimension as merged_input
         """
         activation = self.params.get('attentionActivation', None)
+        if activation == 'None':
+            activation = None
         feature_vector_size = K.int_shape(merged_input)[-1]
         merged_input = layers.Permute((2, 1))(merged_input)
         att_layer = layers.TimeDistributed(
