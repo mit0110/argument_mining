@@ -26,14 +26,14 @@ do
         --attention_model $ATTENTION_MODEL \
         --output_dirpath $RESULT_DIRECTORY/${SEPARATION_LEVEL}${RELATIONS}/$EXPERIMENT_DIRECTORY \
         --experiment_name $PARTITION \
-        --char_embedding cnn \
+        --char_embedding lstm \
         --char_embedding_size 32 \
         --epochs 50 \
-        --classifier Softmax \
+        --classifier CRF \
         --patience 10 \
         --dropout 0.1 0.1 \
         --batch_size 30 \
-        --num_units 200 200
+        --num_units 50 50
     # Now we need to evaluate the model
     MODEL_NAME=$(compgen -f $RESULT_DIRECTORY/${SEPARATION_LEVEL}${RELATIONS}/$EXPERIMENT_DIRECTORY/$PARTITION*h5)
     echo "********* Evaluating model $MODEL_NAME"
