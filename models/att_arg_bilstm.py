@@ -27,9 +27,10 @@ class TimePreAttArgBiLSTM(ArgBiLSTM):
         Retruns:
             3-dimensional Tensor of the same dimension as merged_input
         """
+        activation = self.params.get('attentionActivation', None)
         feature_vector_size = K.int_shape(merged_input)[-1]
         att_layer = layers.TimeDistributed(
-            layers.Dense(feature_vector_size, activation='tanh'),
+            layers.Dense(feature_vector_size, activation=activation),
             name='attention_matrix_score')(merged_input)
         # Calculate a single score for each timestep
         att_layer = layers.Lambda(lambda x: K.mean(x, axis=2),
@@ -257,10 +258,11 @@ class FeaturePreAttArgBiLSTM(TimePreAttArgBiLSTM):
         Retruns:
             3-dimensional Tensor of the same dimension as merged_input
         """
+        activation = self.params.get('attentionActivation', None)
         feature_vector_size = K.int_shape(merged_input)[-1]
         merged_input = layers.Permute((2, 1))(merged_input)
         att_layer = layers.TimeDistributed(
-            layers.Dense(self.max_sentece_length, activation=None),
+            layers.Dense(self.max_sentece_length, activation=activation),
             name='attention_matrix_score')(merged_input)
         # Calculate a single score for each timestep
         att_layer = layers.Lambda(lambda x: K.mean(x, axis=1),

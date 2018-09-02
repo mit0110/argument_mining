@@ -10,7 +10,8 @@ DATA_DIR="../data/echr/annotation/for_training"
 echo "******** Starting experiment $DATE"
 echo "******** Using relation suffix $RELATIONS"
 ATTENTION_MODEL="time_pre"
-echo "******** Using attention " $ATTENTION_MODEL
+ATTENTION_ACTIVATION="sigmoid"
+echo "******** Using attention " $ATTENTION_MODEL " " $ATTENTION_ACTIVATION
 
 
 mkdir $RESULT_DIRECTORY/${SEPARATION_LEVEL}${RELATIONS}/
@@ -24,6 +25,7 @@ do
     python -u experiments/train_BiLSTM_CNN_CRF.py \
         --dataset $DATASET_NAME \
         --attention_model $ATTENTION_MODEL \
+        --attention_activation $ATTENTION_ACTIVATION \
         --output_dirpath $RESULT_DIRECTORY/${SEPARATION_LEVEL}${RELATIONS}/$EXPERIMENT_DIRECTORY \
         --experiment_name $PARTITION \
         --char_embedding lstm \

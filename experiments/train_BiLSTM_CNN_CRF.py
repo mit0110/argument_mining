@@ -73,6 +73,9 @@ def read_args():
     parser.add_argument('--attention_model', type=str, default='None',
                         help='Use the specified attention mechanism. Options: '
                              'None, ' + ', '.join(ATTENTION_MODELS.keys()))
+    parser.add_argument('--attention_activation', type=str, default=None,
+                        help='Use the specified attention activation. Options: '
+                             'tanh, sigmoid')
     args = parser.parse_args()
 
     assert len(args.num_units) == len(args.dropout)
@@ -96,7 +99,8 @@ def main():
         'classifier': args.classifier, 'LSTM-Size': args.num_units,
         'dropout': args.dropout, 'charEmbeddingsSize': args.char_embedding_size,
         'charEmbeddings': args.char_embedding, 'miniBatchSize': args.batch_size,
-        'earlyStopping': args.patience
+        'earlyStopping': args.patience,
+        'attentionActivation': args.attention_activation,
     }
     print(classifier_params)
 

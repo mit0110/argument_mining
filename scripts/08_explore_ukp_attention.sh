@@ -9,9 +9,9 @@ SEPARATION_LEVEL="paragraph"
 DATA_DIR="../data/echr/annotation/for_exploration"
 echo "******** Starting experiment $DATE"
 echo "******** Using relation suffix $RELATIONS"
-echo "******** Using attention!"
-
-ATTENTION_MODEL="None"
+ATTENTION_MODEL=$7
+ATTENTION_ACTIVATION=$8
+echo "******** Using attention " $ATTENTION_MODEL " " $ATTENTION_ACTIVATION
 
 mkdir $RESULT_DIRECTORY/${SEPARATION_LEVEL}${RELATIONS}/
 mkdir $RESULT_DIRECTORY/${SEPARATION_LEVEL}${RELATIONS}/$EXPERIMENT_DIRECTORY
@@ -24,6 +24,7 @@ do
     python -u experiments/train_BiLSTM_CNN_CRF.py \
         --dataset $DATASET_NAME \
         --attention_model $ATTENTION_MODEL \
+        --attention_activation $ATTENTION_ACTIVATION \
         --output_dirpath $RESULT_DIRECTORY/${SEPARATION_LEVEL}${RELATIONS}/$EXPERIMENT_DIRECTORY \
         --experiment_name $PARTITION \
         --char_embedding $1 \

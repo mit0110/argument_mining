@@ -7,9 +7,9 @@ EXPERIMENT_DIRECTORY="ongoing-"$DATE
 SEPARATION_LEVEL="sentence"
 DATA_DIR="../data/essays"
 echo "******** Starting experiment $DATE"
-ATTENTION_MODEL="time_pre"
-echo "******** Using attention " $ATTENTION_MODEL
-
+ATTENTION_MODEL=$7
+ATTENTION_ACTIVATION=$8
+echo "******** Using attention " $ATTENTION_MODEL " " $ATTENTION_ACTIVATION
 
 mkdir $RESULT_DIRECTORY/
 mkdir $RESULT_DIRECTORY/$EXPERIMENT_DIRECTORY
@@ -19,6 +19,7 @@ DATASET_NAME=$DATA_DIR/essays_komninos_e.p
 python -u experiments/train_BiLSTM_CNN_CRF.py \
     --dataset $DATASET_NAME \
     --attention_model $ATTENTION_MODEL \
+    --attention_activation $ATTENTION_ACTIVATION \
     --output_dirpath $RESULT_DIRECTORY/$EXPERIMENT_DIRECTORY \
     --experiment_name essays \
     --char_embedding $1 \

@@ -1,3 +1,6 @@
+ATTENTION_MODEL=$1
+ATTENTION_ACTIVATION=$2
+
 for i in 1 2 3 4 5; do
     echo "******************* EXPLORING SETTING $i ***************************"
     CHAR_EMB=(lstm None)
@@ -25,5 +28,7 @@ for i in 1 2 3 4 5; do
     echo "Batch size" $rand_batch_size
 
     bash scripts/09_train_essays.sh $rand_char_emb $rand_char_emb_size \
-        $rand_classifier $rand_dropout $rand_batch_size $rand_lstm_units
+        $rand_classifier $rand_dropout $rand_batch_size $rand_lstm_units \
+        ATTENTION_MODEL ATTENTION_ACTIVATION
+
 done
