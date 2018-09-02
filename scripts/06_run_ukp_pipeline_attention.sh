@@ -9,9 +9,9 @@ SEPARATION_LEVEL="paragraph"
 DATA_DIR="../data/echr/annotation/for_training"
 echo "******** Starting experiment $DATE"
 echo "******** Using relation suffix $RELATIONS"
-echo "******** Using attention!"
-
 ATTENTION_MODEL="time_pre"
+echo "******** Using attention " $ATTENTION_MODEL
+
 
 mkdir $RESULT_DIRECTORY/${SEPARATION_LEVEL}${RELATIONS}/
 mkdir $RESULT_DIRECTORY/${SEPARATION_LEVEL}${RELATIONS}/$EXPERIMENT_DIRECTORY
@@ -31,7 +31,7 @@ do
         --epochs 50 \
         --classifier CRF \
         --patience 10 \
-        --dropout 0.1 0.1 \
+        --dropout 0.3 0.3 \
         --batch_size 30 \
         --num_units 50 50
     # Now we need to evaluate the model

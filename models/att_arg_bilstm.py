@@ -29,7 +29,7 @@ class TimePreAttArgBiLSTM(ArgBiLSTM):
         """
         feature_vector_size = K.int_shape(merged_input)[-1]
         att_layer = layers.TimeDistributed(
-            layers.Dense(feature_vector_size, activation=None),
+            layers.Dense(feature_vector_size, activation='sigmoid'),
             name='attention_matrix_score')(merged_input)
         # Calculate a single score for each timestep
         att_layer = layers.Lambda(lambda x: K.mean(x, axis=2),

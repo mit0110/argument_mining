@@ -6,15 +6,15 @@ index   token    [BI]-[entity label]:[related entity's index]:[relation label]
 
 
 Usage:
-    build_conll.py --input_filename=<filename> --output_dirname=<filename> [--include_relations] [--separation=<separation>]
+    build_conll.py --input_filename=<filename> --output_filename=<filename> [--include_relations] [--separation=<separation>]
 
 Options:
     --input_filename <filename>     The path to pickled file contianing the
                                     documents.
-    --output_dirname <dirname>      The path to the directory to store the
-                                    resulting conll files
-    --include_relations             Weather to include relations in the label or
-                                    not.
+    --output_filename <filename>    The path to the conll file to store the
+                                    output
+    --include_relations             Weather to include relations in the label
+                                    or not.
     --separation <separation>       The separation level. Options are sentence,
                                     paragraph or section. Default is sentence.
 
@@ -29,8 +29,8 @@ import utils
 
 
 class DocumentWriter(object):
-    def __init__(self, output_dirname, include_relations=True, separation=None):
-        self.output_dirname = output_dirname
+    def __init__(self, output_file, include_relations=True, separation=None):
+        self.output_file = output_file
         self.token_index = 0
         self.include_relations = include_relations
         self.relations = None
@@ -58,7 +58,6 @@ class DocumentWriter(object):
         self.document = document
         self.current_paragraph = None
         self.current_section = None
-
         for sentence in document.sentences:
             if (self.separation == 'paragraph'
                   and sentence.paragraph_number != self.current_paragraph):
@@ -90,8 +89,7 @@ class DocumentWriter(object):
                 if self.include_relations:
                     relation, target_index = self._get_relations(
                         self.last_component_start, self.relations)
-            self._write_line(word, bio_label, label, relation, target_index,
-                             output_file)
+            self._write_line(word, bio_label, label, relation, target_index)
 
     @staticmethod
     def _get_relations(component_start, relations):
@@ -104,22 +102,21 @@ class DocumentWriter(object):
             if relation in ['Attack', 'Support']:
                 return target, relation
 
-    def _write_line(self, word, bio_label, label, relation, target_index,
-                    output_file):
+    def _write_line(self, word, bio_label, label, relation, target_index):
         if bio_label == 'O':
-            output_file.write('{}\t{}\t_\t_\t{}\n'.format(
+            self.output_file.write('{}\t{}\t_\t_\t{}\n'.format(
                 self.token_index, word, bio_label))
         elif not self.include_relations:
-            output_file.write('{}\t{}\t_\t_\t{}-{}\n'.format(
+            self.output_file.write('{}\t{}\t_\t_\t{}-{}\n'.format(
                 self.token_index, word, bio_label, label))
         else:
-            output_file.write('{}\t{}\t_\t_\t{}-{}:{}:{}\n'.format(
+            self.output_file.write('{}\t{}\t_\t_\t{}-{}:{}:{}\n'.format(
                 self.token_index, word, bio_label, label,
                 relation, target_index))
         self.token_index += 1
 
-    def end_section(self, output_file):
-        output_file.write('\n')
+    def end_section(self):
+        self.output_file.write('\n')
 
 
 def main():
@@ -130,14 +127,14 @@ def main():
         separation = args['separation']
     else:
         separation = 'sentence'
-
-    writer = DocumentWriter(output_dirname=args['output_dirname'],
-                            include_relations=args['include_relations'],
-                            separation=separation)
-    for document in documents:
-        if document.has_annotation():
-            print('Adding document {}'.format(document.identifier))
-            writer.write_document(document)
+    with open(args['output_filename'], 'w') as output_file:
+        writer = DocumentWriter(output_file,
+                                include_relations=args['include_relations'],
+                                separation=separation)
+        for document in documents:
+            if document.has_annotation():
+                print('Adding document {}'.format(document.identifier))
+                writer.write_document(document)
 
 
 
