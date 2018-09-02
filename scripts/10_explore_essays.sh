@@ -1,9 +1,9 @@
 ATTENTION_MODEL=$1
 ATTENTION_ACTIVATION=$2
 
-for i in 1 2 3 4 5; do
+for i in 1 2 3 4 5 6 7 8; do
     echo "******************* EXPLORING SETTING $i ***************************"
-    CHAR_EMB=(lstm None)
+    CHAR_EMB=(lstm None cnn)
     rand_char_emb=${CHAR_EMB[$[$RANDOM % ${#CHAR_EMB[@]}]]}
     echo "Char embedding type" $rand_char_emb
 
