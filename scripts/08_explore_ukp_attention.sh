@@ -19,7 +19,7 @@ for PARTITION_DIR in $(compgen -f $DATA_DIR/partition)
 do
     PARTITION=$(basename $PARTITION_DIR)
     echo "******** Training on $PARTITION"
-    DATASET_NAME=$(compgen -f $PARTITION_DIR/${SEPARATION_LEVEL}${RELATIONS}/ukp*.p)
+    DATASET_NAME=$(compgen -f $PARTITION_DIR/${SEPARATION_LEVEL}${RELATIONS}/ukp2*.p)
     # The model resulting from this command will be saved in --output_dirpath + --experiment_name _model.h5
     python -u experiments/train_BiLSTM_CNN_CRF.py \
         --dataset $DATASET_NAME \
