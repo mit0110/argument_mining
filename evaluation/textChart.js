@@ -35,6 +35,7 @@ TextChart = class TextChartClass {
     this.paragraph = 0;
     this.useColor = opts.useColor || false;
     this.labelColors = opts.labelColors;
+    this.minValue = opts.minValue || 0;
   }
 
   /**
@@ -111,10 +112,10 @@ TextChart = class TextChartClass {
   }
 
   getOpacityScale() {
-    var domainMin = this.words.reduce(
-      (min, p) => Math.min(p[1], min), this.words[0][1])
+    var domainMin = Math.max(this.words.reduce(
+      (min, p) => Math.min(p[1], min), this.words[0][1]), this.minValue);
     var domainMax = this.words.reduce(
-      (max, p) => Math.max(p[1], max), this.words[0][1])
+      (max, p) => Math.max(p[1], max), this.words[0][1]);
     return d3.scale.linear().domain([domainMin, domainMax]).range([0, 1]);
   }
 
