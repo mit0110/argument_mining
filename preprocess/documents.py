@@ -196,6 +196,7 @@ class AnnotatedDocument(UnlabeledDocument):
     def add_label_for_position(self, label, start, end, attribute=None):
         """Adds the given label to all words covering range."""
         if not (start >= 0 and end <= self.sentences[-1].end_position):
+            import ipdb; ipdb.set_trace()
             print('WARNING: attempting to set a label from position '
                   '{} to {} in document with max len of {}'.format(
                 start, end, self.sentences[-1].end_position))
@@ -306,3 +307,5 @@ class AnnotatedJudgement(AnnotatedDocument):
                 self.sentences.append(sentence)
                 position_in_document += 1
                 index += 1
+                start_index += len(raw_sentence)
+
