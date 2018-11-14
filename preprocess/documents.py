@@ -196,7 +196,6 @@ class AnnotatedDocument(UnlabeledDocument):
     def add_label_for_position(self, label, start, end, attribute=None):
         """Adds the given label to all words covering range."""
         if not (start >= 0 and end <= self.sentences[-1].end_position):
-            import ipdb; ipdb.set_trace()
             print('WARNING: attempting to set a label from position '
                   '{} to {} in document with max len of {}'.format(
                 start, end, self.sentences[-1].end_position))
@@ -259,18 +258,20 @@ class AnnotatedJudgement(AnnotatedDocument):
     SECTION_REGEX = re.compile('^[A|B|C|D|III|II|I|IV]\.\s*(.{,50})$')
 
     def get_initial_position(self, previous_sentence, raw_sentence,
-                             start_index):
+                             start_index, last_sentence_start):
         if previous_sentence != '':
-            initial_position = self.text.find(previous_sentence) + start_index
+            initial_position = self.text.find(
+                previous_sentence, last_sentence_start) + start_index
             current_initial_position = self.text.find(
-                raw_sentence) + start_index
+                raw_sentence, last_sentence_start) + start_index
             missing_spaces = (current_initial_position -
                               initial_position - len(previous_sentence))
             raw_sentence = (previous_sentence + ' ' * missing_spaces +
                             raw_sentence)
             previous_sentence = ''
         else:
-            initial_position = self.text.find(raw_sentence) + start_index
+            initial_position = self.text.find(
+                raw_sentence, last_sentence_start) + start_index
         return initial_position, previous_sentence, raw_sentence
 
     def build_from_text(self, text, start_index=0):
@@ -281,6 +282,7 @@ class AnnotatedJudgement(AnnotatedDocument):
         current_section = 'Introduction'
         paragraphs = self.text.split('\n')
         position_in_document = 0
+        last_sentence_start = start_index
         for paragraph_index, paragraph in enumerate(paragraphs):
             raw_sentences = sent_tokenize(paragraph)
             index = 0
@@ -289,11 +291,11 @@ class AnnotatedJudgement(AnnotatedDocument):
                 # Fix the tokenization for line numbers
                 if len(raw_sentence) < 4:
                     previous_sentence = raw_sentence
-                    # import ipdb; ipdb.set_trace()
                     continue
                 initial_position, previous_sentence, raw_sentence = (
                     self.get_initial_position(previous_sentence,
-                                              raw_sentence, start_index)
+                                              raw_sentence, start_index,
+                                              last_sentence_start)
                 )
                 assert initial_position >= 0
                 candidate_section = self.SECTION_REGEX.search(raw_sentence)
@@ -307,5 +309,5 @@ class AnnotatedJudgement(AnnotatedDocument):
                 self.sentences.append(sentence)
                 position_in_document += 1
                 index += 1
-                start_index += len(raw_sentence)
+                last_sentence_start += len(raw_sentence)
 
