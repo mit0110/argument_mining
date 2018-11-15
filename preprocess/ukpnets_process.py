@@ -105,7 +105,7 @@ def main():
     datasets = {
         dataset_name: { # Name of the dataset
             # Name of the columns
-            'columns': {1: 'tokens', 2: 'arg_component'},
+            'columns': {1: 'tokens', 4: 'arg_component'},
             # Directory of the dataset
             'dirpath': args.dataset,
             # Which column we want to predict

@@ -29,5 +29,5 @@ for i in 1 2 3 4 5; do
 
     bash scripts/08_explore_ukp_attention.sh $rand_char_emb $rand_char_emb_size \
         $rand_classifier $rand_dropout $rand_batch_size $rand_lstm_units \
-        ATTENTION_MODEL ATTENTION_ACTIVATION
+        $ATTENTION_MODEL $ATTENTION_ACTIVATION
 done
