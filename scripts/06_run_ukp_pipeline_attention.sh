@@ -9,8 +9,8 @@ SEPARATION_LEVEL="paragraph"
 DATA_DIR="../data/echr/annotation/for_training"
 echo "******** Starting experiment $DATE"
 echo "******** Using relation suffix $RELATIONS"
-ATTENTION_MODEL="time_pre"
-ATTENTION_ACTIVATION="sigmoid"
+ATTENTION_MODEL=$7
+ATTENTION_ACTIVATION=$8
 echo "******** Using attention " $ATTENTION_MODEL " " $ATTENTION_ACTIVATION
 
 
@@ -20,7 +20,7 @@ for PARTITION_DIR in $(compgen -f $DATA_DIR/partition)
 do
     PARTITION=$(basename $PARTITION_DIR)
     echo "******** Training on $PARTITION"
-    DATASET_NAME=$(compgen -f $PARTITION_DIR/${SEPARATION_LEVEL}${RELATIONS}/ukp*.p)
+    DATASET_NAME=$(compgen -f $PARTITION_DIR/${SEPARATION_LEVEL}${RELATIONS}/ukp2*.p)
     # The model resulting from this command will be saved in --output_dirpath + --experiment_name _model.h5
     python -u experiments/train_BiLSTM_CNN_CRF.py \
         --dataset $DATASET_NAME \
@@ -28,14 +28,14 @@ do
         --attention_activation $ATTENTION_ACTIVATION \
         --output_dirpath $RESULT_DIRECTORY/${SEPARATION_LEVEL}${RELATIONS}/$EXPERIMENT_DIRECTORY \
         --experiment_name $PARTITION \
-        --char_embedding lstm \
-        --char_embedding_size 32 \
+        --char_embedding $1 \
+        --char_embedding_size $2 \
         --epochs 50 \
-        --classifier CRF \
+        --classifier $3 \
         --patience 10 \
-        --dropout 0.3 0.3 \
-        --batch_size 30 \
-        --num_units 50 50
+        --dropout $4 $4 \
+        --batch_size $5 \
+        --num_units $6 $6
     # Now we need to evaluate the model
     MODEL_NAME=$(compgen -f $RESULT_DIRECTORY/${SEPARATION_LEVEL}${RELATIONS}/$EXPERIMENT_DIRECTORY/$PARTITION*h5)
     echo "********* Evaluating model $MODEL_NAME"
