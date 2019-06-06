@@ -28,6 +28,8 @@ sys.path.insert(0, os.path.abspath('.'))
 
 import utils
 
+from tqdm import tqdm
+
 
 class DocumentWriter(object):
     def __init__(self, output_file, include_relations=True, separation=None):
@@ -132,7 +134,7 @@ def main():
         writer = DocumentWriter(output_file,
                                 include_relations=args['include_relations'],
                                 separation=separation)
-        for document in documents:
+        for document in tqdm(documents):
             if document.has_annotation():
                 print('Adding document {}'.format(document.identifier))
                 writer.write_document(document)
