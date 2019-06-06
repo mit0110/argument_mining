@@ -10,7 +10,8 @@ import os
 import numpy
 import pandas
 import utils
-
+import sys
+sys.path.append('..')
 from sklearn import metrics
 from models.arg_bilstm import ArgBiLSTM
 from models.att_arg_bilstm import TimePreAttArgBiLSTM, FeaturePreAttArgBiLSTM

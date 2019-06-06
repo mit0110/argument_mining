@@ -9,8 +9,9 @@ import argparse
 import logging
 import os
 import sys
+parent = os.path.abspath('..')
+sys.path.insert(0, parent)
 import utils
-
 from models.arg_bilstm import ArgBiLSTM
 from models.att_arg_bilstm import TimePreAttArgBiLSTM, FeaturePreAttArgBiLSTM
 

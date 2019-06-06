@@ -2,10 +2,10 @@
 # argument mining folder
 
 DATE=$(date +%y-%m-%d-%H-%M)
-RESULT_DIRECTORY="../results/essays"
+RESULT_DIRECTORY="/users/jfrau/am/results/essays2"
 EXPERIMENT_DIRECTORY="ongoing-"$DATE
 SEPARATION_LEVEL="sentence"
-DATA_DIR="../data/essays"
+DATA_DIR="/users/mteruel/am/data/essays"
 echo "******** Starting experiment $DATE"
 ATTENTION_MODEL=$7
 ATTENTION_ACTIVATION=$8
