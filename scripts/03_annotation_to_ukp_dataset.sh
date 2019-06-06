@@ -1,5 +1,5 @@
-RELATIONS="_wrel"  # If true, add the string corresponding to the relation identifier
-SEPARATION_LEVEL="paragraph"
+RELATIONS=""  # If true, add the string corresponding to the relation identifier
+SEPARATION_LEVEL="claim-det-paragraph"
 DATA_DIR="../data/echr/annotation/for_training"
 
 echo "Creating embedded representation"
@@ -8,5 +8,5 @@ do
 	echo "Processing partition $PARTITION_DIR"
     # This command creates the representation (with embeeddings and mappings) necessary
     # for the ukpnets inputs
-    python preprocess/ukpnets_process.py --embeddings_path ../data/wordvectors/komninos_english_embeddings.gz --output_dirpath $PARTITION_DIR/${SEPARATION_LEVEL}${RELATIONS} --dataset $PARTITION_DIR/${SEPARATION_LEVEL}${RELATIONS} --name ukp
+    python preprocess/ukpnets_process.py --embeddings_path ../data/wordvectors/komninos_english_embeddings.gz --output_dirpath $PARTITION_DIR/${SEPARATION_LEVEL}${RELATIONS} --dataset $PARTITION_DIR/${SEPARATION_LEVEL}${RELATIONS} --name ukp-claim-det
 done
