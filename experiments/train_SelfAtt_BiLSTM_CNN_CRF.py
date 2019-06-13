@@ -12,13 +12,7 @@ import sys
 parent = os.path.abspath('..')
 sys.path.insert(0, parent)
 import utils
-from models.arg_bilstm import ArgBiLSTM
-from models.att_arg_bilstm import TimePreAttArgBiLSTM, FeaturePreAttArgBiLSTM
-
-ATTENTION_MODELS = {
-    'time_pre': TimePreAttArgBiLSTM,
-    'feature_pre': FeaturePreAttArgBiLSTM,
-}
+from models.selfatt_arg_bilstm import SelfAttArgBiLSTM
 
 
 loggingLevel = logging.INFO
@@ -71,12 +65,10 @@ def read_args():
                              'CRF or Softmax.')
     parser.add_argument('--experiment_name', type=str, default=None,
                         help='Name of the experiment to store the results')
-    parser.add_argument('--attention_model', type=str, default='None',
-                        help='Use the specified attention mechanism. Options: '
-                             'None, ' + ', '.join(ATTENTION_MODELS.keys()))
-    parser.add_argument('--attention_activation', type=str, default=None,
-                        help='Use the specified attention activation. Options: '
-                             'tanh, sigmoid')
+    parser.add_argument('--n_heads', type=int,
+                        help='Number of attention heads.')
+    parser.add_argument('--attention_size', type=int,
+                        help='Size of the attention layer\'s output.')
     args = parser.parse_args()
 
     assert len(args.num_units) == len(args.dropout)
@@ -102,15 +94,12 @@ def main():
         'charEmbeddings': args.char_embedding, 'miniBatchSize': args.batch_size,
         'earlyStopping': args.patience,
         'attentionActivation': args.attention_activation,
+        'n_heads': args.n_heads, 'attention_size': args.attention_size
     }
     print(classifier_params)
 
-    attention_model = ATTENTION_MODELS.get(args.attention_model, None)
-    print('Attention model: {}'.format(attention_model))
-    if attention_model is None:
-        model = ArgBiLSTM(classifier_params)
-    else:
-        model = attention_model(classifier_params)
+    print('Attention model: self')
+    model = SelfAttArgBiLSTM(classifier_params)
     model.setMappings(mappings, embeddings)
     model.setDataset(datasets, data)
     # Path to store performance scores for dev / test
