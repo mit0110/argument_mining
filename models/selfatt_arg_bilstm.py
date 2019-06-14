@@ -162,7 +162,6 @@ class SelfAttArgBiLSTM(ArgBiLSTM):
             self.n_heads, self.attention_size, dropout=attention_dropout)
         output, self_attention = self_att_layer(
             merged_input, merged_input, merged_input)
-        import ipdb; ipdb.set_trace()
         # TODO extract self_attention somehow
 
         # TODO: Residual encoding - decide if to include or not.
