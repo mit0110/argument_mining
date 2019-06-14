@@ -2,10 +2,10 @@
 # argument mining folder
 
 DATE=$(date +%y-%m-%d-%H-%M)
-RESULT_DIRECTORY="/users/mteruel/am/results/essays2"
+RESULT_DIRECTORY="/home/mteruel/am/results/essays2"
 EXPERIMENT_DIRECTORY="ongoing-"$DATE
 SEPARATION_LEVEL="sentence"
-DATA_DIR="/users/mteruel/am/data/essays2"
+DATA_DIR="/home/mteruel/am/data/essays2"
 echo "******** Starting experiment $DATE"
 echo "******** Using self attention "
 
@@ -30,11 +30,11 @@ python -u experiments/train_SelfAtt_BiLSTM_CNN_CRF.py \
     # --attention_size $8
 # Now we need to evaluate the model
 MODEL_NAME=$(compgen -f $RESULT_DIRECTORY/$EXPERIMENT_DIRECTORY/essays*h5)
-echo "********* Evaluating model $MODEL_NAME"
-python -u experiments/run_SelfAtt_BiLSTM_CNN_CRF.py \
-    --classifier $MODEL_NAME --dataset $DATASET_NAME \
-    --output_dirname $RESULT_DIRECTORY/$EXPERIMENT_DIRECTORY \
-    --experiment_name essays2
+#echo "********* Evaluating model $MODEL_NAME"
+#python -u experiments/run_SelfAtt_BiLSTM_CNN_CRF.py \
+#    --classifier $MODEL_NAME --dataset $DATASET_NAME \
+#    --output_dirname $RESULT_DIRECTORY/$EXPERIMENT_DIRECTORY \
+#    --experiment_name essays2
 
 echo "********** All experiments completed"
 mv $RESULT_DIRECTORY/$EXPERIMENT_DIRECTORY $RESULT_DIRECTORY/$DATE
