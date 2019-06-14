@@ -13,13 +13,8 @@ import utils
 import sys
 sys.path.append('..')
 from sklearn import metrics
-from models.arg_bilstm import ArgBiLSTM
-from models.att_arg_bilstm import TimePreAttArgBiLSTM, FeaturePreAttArgBiLSTM
+from models.selfatt_arg_bilstm import SelfAttArgBiLSTM
 
-ATTENTION_MODELS = {
-    'time_pre': TimePreAttArgBiLSTM,
-    'feature_pre': FeaturePreAttArgBiLSTM
-}
 
 def read_args():
     parser = argparse.ArgumentParser(
@@ -37,9 +32,6 @@ def read_args():
     parser.add_argument('--experiment_name', type=str, default='',
                         help='Name of the experiment, to use as a prefix '
                              'of the predictions output filename.')
-    parser.add_argument('--attention_model', type=str, default='None',
-                        help='Use the specified attention mechanism. Options: '
-                             'None, ' + ', '.join(ATTENTION_MODELS.keys()))
     args = parser.parse_args()
 
     return args
@@ -61,11 +53,7 @@ def main():
     dataset_name = [x for x in data.keys()][0]  # I hate python 3
     label_encoding = {value: key
                       for key, value in mappings[args.target_column].items()}
-    attention_model = ATTENTION_MODELS.get(args.attention_model, None)
-    if attention_model is None:
-        model = ArgBiLSTM.loadModel(args.classifier)
-    else:
-        model = attention_model.loadModel(args.classifier)
+    model = SelfAttArgBiLSTM(classifier_params)
 
     def tag_dataset(partition_name):
         partition_name_short = 'dev' if 'dev' in partition_name else 'test'
@@ -73,16 +61,16 @@ def main():
             args.output_dirname, 'predictions_{}_{}_{}.conll'.format(
                 args.experiment_name, dataset_name, partition_name_short))
 
-        if attention_model is not None:
-            tags, attention = model.predict(
-                data[dataset_name][partition_name], return_attention=True)
-            attention_filename = os.path.join(
-                args.output_dirname, 'attention_{}_{}_{}.p'.format(
-                    args.experiment_name, dataset_name, partition_name_short))
-            utils.pickle_to_file(attention, attention_filename)
-            del attention
-        else:
-            tags = model.tagSentences(data[dataset_name][partition_name])
+        # if attention_model is not None:
+        #     tags, attention = model.predict(
+        #         data[dataset_name][partition_name], return_attention=True)
+        #     attention_filename = os.path.join(
+        #         args.output_dirname, 'attention_{}_{}_{}.p'.format(
+        #             args.experiment_name, dataset_name, partition_name_short))
+        #     utils.pickle_to_file(attention, attention_filename)
+        #     del attention
+        # else:
+        tags = model.tagSentences(data[dataset_name][partition_name])
         true_labels = []
         result = []
 
