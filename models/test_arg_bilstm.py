@@ -68,7 +68,6 @@ class ArgBiLSTMTest(unittest.TestCase):
             'charEmbeddingsSize': None,
             'charEmbeddings': None
         }
-
         self.model = self.MODEL(classifier_params)
         self.model.setMappings(mappings, embeddings)
         self.model.setDataset(datasets, self.data)

@@ -12,13 +12,7 @@ import sys
 parent = os.path.abspath('..')
 sys.path.insert(0, parent)
 import utils
-from models.arg_bilstm import ArgBiLSTM
-from models.att_arg_bilstm import TimePreAttArgBiLSTM, FeaturePreAttArgBiLSTM
-
-ATTENTION_MODELS = {
-    'time_pre': TimePreAttArgBiLSTM,
-    'feature_pre': FeaturePreAttArgBiLSTM,
-}
+from models.selfatt_arg_bilstm import SelfAttArgBiLSTM
 
 
 loggingLevel = logging.INFO
@@ -71,12 +65,12 @@ def read_args():
                              'CRF or Softmax.')
     parser.add_argument('--experiment_name', type=str, default=None,
                         help='Name of the experiment to store the results')
-    parser.add_argument('--attention_model', type=str, default='None',
-                        help='Use the specified attention mechanism. Options: '
-                             'None, ' + ', '.join(ATTENTION_MODELS.keys()))
-    parser.add_argument('--attention_activation', type=str, default=None,
-                        help='Use the specified attention activation. Options: '
-                             'tanh, sigmoid')
+    parser.add_argument('--n_heads', type=int,
+                        help='Number of attention heads.')
+    parser.add_argument('--attention_size', type=int,
+                        help='Size of the attention layer\'s output.')
+    parser.add_argument('--target_column', type=str, default='arg_component',
+                        help='Name of the column to use as label.')
     args = parser.parse_args()
 
     assert len(args.num_units) == len(args.dropout)
@@ -101,16 +95,13 @@ def main():
         'dropout': args.dropout, 'charEmbeddingsSize': args.char_embedding_size,
         'charEmbeddings': args.char_embedding, 'miniBatchSize': args.batch_size,
         'earlyStopping': args.patience,
-        'attentionActivation': args.attention_activation,
+        'n_heads': 4, # args.n_heads,
+        'attention_size': 256 # args.attention_size
     }
     print(classifier_params)
 
-    attention_model = ATTENTION_MODELS.get(args.attention_model, None)
-    print('Attention model: {}'.format(attention_model))
-    if attention_model is None:
-        model = ArgBiLSTM(classifier_params)
-    else:
-        model = attention_model(classifier_params)
+    print('Attention model: self')
+    model = SelfAttArgBiLSTM(classifier_params)
     model.setMappings(mappings, embeddings)
     model.setDataset(datasets, data)
     # Path to store performance scores for dev / test
@@ -126,9 +117,43 @@ def main():
     model.storeResults(results_filename)
     # Path to store models. We only want to store the best model found until
     # the moment
-    model.modelSavePath = os.path.join(
-        args.output_dirpath, "{}_model.h5".format(args.experiment_name))
+    model.modelSavePath = None #os.path.join(
+    #    args.output_dirpath, "{}_model.h5".format(args.experiment_name))
     model.fit(epochs=args.epochs)
+
+    dataset_name = [x for x in data.keys()][0]  # I hate python 3
+    label_encoding = {value: key
+                      for key, value in mappings[args.target_column].items()}
+
+    def tag_dataset(partition_name):
+        partition_name_short = 'dev' if 'dev' in partition_name else 'test'
+        output_filename = os.path.join(
+            args.output_dirpath, 'predictions_{}_{}_{}.conll'.format(
+                args.experiment_name, dataset_name, partition_name_short))
+
+        tags = model.tagSentences(data[dataset_name][partition_name])
+        true_labels = []
+        result = []
+
+        for idx, (sentence, sentence_labels) in enumerate(zip(
+                data[dataset_name][partition_name], tags[dataset_name])):
+            for token, true_label_id, predicted_label in zip(
+                    sentence['raw_tokens'], sentence[args.target_column],
+                    sentence_labels):
+                if token == 'PADDING_TOKEN':
+                    continue
+                true_label = label_encoding[true_label_id]
+                true_labels.append(true_label)
+                result.append((token, true_label, predicted_label, idx))
+
+        result = pandas.DataFrame(
+            result, columns=['Token', 'True', 'Predicted', 'Sentence'])
+        result.to_csv(output_filename, sep='\t', index=False)
+        print(metrics.classification_report(
+    	    true_labels, numpy.concatenate(tags[dataset_name])))
+
+    tag_dataset('devMatrix')
+    tag_dataset('testMatrix')
 
 
 if __name__ == '__main__':

@@ -11,6 +11,7 @@ from models.arg_bilstm import ArgBiLSTM
 
 MAX_SENTENCE_LENGHT = 400
 
+
 class TimePreAttArgBiLSTM(ArgBiLSTM):
     """Bidirectional RNN with an attention mechanism.
 
