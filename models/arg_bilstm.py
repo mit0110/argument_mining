@@ -85,7 +85,7 @@ class FixedSizeBiLSTM(BiLSTM):
             predictions = model.predict(instances, verbose=False)
             predictions = predictions.argmax(axis=-1) #Predict classes
             # We need to "unpad" the predicted labels. We use the
-            # lenght of any random feature in the sentence. 
+            # lenght of any random feature in the sentence.
             for pred, sentence in zip(predictions, sentences[start:end]):
                 sentence_len = len(sentence['tokens'])
                 if sentence_len > pred.shape[0]:
@@ -95,6 +95,29 @@ class FixedSizeBiLSTM(BiLSTM):
                     pred_labels.append(pred[-sentence_len:])
 
         return pred_labels
+
+    def trainModel(self):
+        self.epoch += 1
+        opt = 'optimizer'
+        if self.params[opt] in self.learning_rate_updates and
+            self.epoch in self.learning_rate_updates[self.params[opt]]:
+            logging.info("Update Learning Rate to {}".format(
+                self.learning_rate_updates[self.params[opt]][self.epoch]))
+            for model_name in self.modelNames:
+                K.set_value(
+                    self.models[model_name].optimizer.lr,
+                    self.learning_rate_updates[self.params[opt]][self.epoch])
+
+
+        label_O_idx = self.mappings[self.dataset[model_name]['label']]['O']
+        label_claim_idx = self.mappings[self.dataset[model_name]['label']]['claim']
+        class_weight = {label_O_idx: 1., label_claim_idx: 50.}
+        for batch in self.minibatch_iterate_dataset():
+            for model_name in self.modelNames:
+                labels = batch[model_name][0]
+                input = batch[model_name][1:]
+                self.models[model_name].train_on_batch(
+                    input, labels, class_weight=class_weight)
 
 
 class ArgBiLSTM(FixedSizeBiLSTM):
