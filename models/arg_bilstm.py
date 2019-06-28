@@ -28,6 +28,10 @@ class FixedSizeBiLSTM(BiLSTM):
         super(FixedSizeBiLSTM, self).__init__(params)
         self.max_sentece_length = None  # If this is none, the longest sentence
         # in the batch is used
+        self.class_weight = { }
+        for label,weight in label_weight.items():
+            self.class_weight[self.mappings[self.dataset[model_name]\
+                                ['label']][label]] = weight
 
     def add_padded_sentences(self, train_matrix, label_name):
         labels = pad_sequences(
@@ -108,10 +112,6 @@ class FixedSizeBiLSTM(BiLSTM):
                     self.models[model_name].optimizer.lr,
                     self.learning_rate_updates[self.params[opt]][self.epoch])
 
-
-        label_O_idx = self.mappings[self.dataset[model_name]['label']]['O']
-        label_claim_idx = self.mappings[self.dataset[model_name]['label']]['claim']
-        class_weight = {label_O_idx: 1., label_claim_idx: 50.}
         for batch in self.minibatch_iterate_dataset():
             for model_name in self.modelNames:
                 labels = batch[model_name][0]
