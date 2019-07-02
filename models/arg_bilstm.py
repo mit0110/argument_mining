@@ -103,7 +103,7 @@ class FixedSizeBiLSTM(BiLSTM):
     def trainModel(self):
         self.epoch += 1
         opt = 'optimizer'
-        if self.params[opt] in self.learning_rate_updates and
+        if self.params[opt] in self.learning_rate_updates and\
             self.epoch in self.learning_rate_updates[self.params[opt]]:
             logging.info("Update Learning Rate to {}".format(
                 self.learning_rate_updates[self.params[opt]][self.epoch]))
