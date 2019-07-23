@@ -186,7 +186,7 @@ def main():
     else:
         parser = None
     for filename in tqdm(filenames):
-        with AnnotatedJudgementFactory(filename) as instance_extractor:
+        with AnnotatedDocumentFactory(filename) as instance_extractor:
             document = instance_extractor.build_document()
             if args['parse_trees']:
                 document.parse_text(parser)

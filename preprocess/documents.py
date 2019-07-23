@@ -154,6 +154,7 @@ class UnlabeledDocument(object):
         else:
             paragraphs = text
         position_in_document = 0
+        seen_text = 0
         for paragraph_index, paragraph in enumerate(paragraphs):
             raw_sentences = sent_tokenize(paragraph)
             for index, raw_sentence in enumerate(raw_sentences):
@@ -161,10 +162,12 @@ class UnlabeledDocument(object):
                                     paragraph_number=paragraph_index,
                                     position_in_paragraph=index)
                 if isinstance(text, str):
-                    initial_position = self.text.find(raw_sentence) + start_index
+                    initial_position = (self.text[seen_text:].find(raw_sentence) +
+                                        start_index + seen_text)
                     assert initial_position >= 0
                 else:
                     initial_position = 0
+                seen_text = initial_position
                 sentence.build_from_text(raw_sentence, initial_position)
                 self.sentences.append(sentence)
                 position_in_document += 1
