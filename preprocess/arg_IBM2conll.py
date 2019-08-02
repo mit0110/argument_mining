@@ -77,7 +77,7 @@ def get_all_labels_from_json(labels_dirname):
                 start = claim['article']['cleanSpan']['start']
                 end = claim['article']['cleanSpan']['end']
                 claim_start_end = (start, end)
-                key = claim['article']['cleanFile']
+                key = claim['article']['cleanFile'].split("/")[-1]
                 labels_from_json[key].append(claim_start_end)
     return labels_from_json
 
@@ -95,12 +95,10 @@ def main():
     labels_from_json = get_all_labels_from_json(labels_dirname)
     for filename in tqdm(filenames):
         with AnnotatedIBMFactory(filename) as instance_extractor:
-            filename_key = "/".join(filename.split("/")[-3:])
+            filename_key = filename.split("/")[-1]
             document = instance_extractor.build_document(
-                labels_from_json[filename_key])
-
+            labels_from_json[filename_key])
             documents.append(document)
-
     utils.pickle_to_file(documents, args['output_file'])
 
 if __name__ == '__main__':

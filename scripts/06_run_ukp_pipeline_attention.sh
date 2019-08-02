@@ -5,7 +5,7 @@ DATE=$(date +%y-%m-%d-%H-%M)
 RESULT_DIRECTORY="../results/ukpnets"
 EXPERIMENT_DIRECTORY="ongoing-"$DATE
 RELATIONS=""
-SEPARATION_LEVEL="paragraph"
+SEPARATION_LEVEL="claim-det-paragraph"
 DATA_DIR="../data/echr/annotation/for_training"
 echo "******** Starting experiment $DATE"
 echo "******** Using relation suffix $RELATIONS"
@@ -20,7 +20,7 @@ for PARTITION_DIR in $(compgen -f $DATA_DIR/partition)
 do
     PARTITION=$(basename $PARTITION_DIR)
     echo "******** Training on $PARTITION"
-    DATASET_NAME=$(compgen -f $PARTITION_DIR/${SEPARATION_LEVEL}${RELATIONS}/ukp2*.p)
+    DATASET_NAME=$(compgen -f $PARTITION_DIR/${SEPARATION_LEVEL}${RELATIONS}/ukp-claim-det*.p)
     # The model resulting from this command will be saved in --output_dirpath + --experiment_name _model.h5
     python -u experiments/train_BiLSTM_CNN_CRF.py \
         --dataset $DATASET_NAME \
