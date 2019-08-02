@@ -12,3 +12,10 @@ att_palette = {
     'Self Attention': colors.yellow,
     'Bert': colors.red
 }
+
+activation_palette = {
+    'sigmoid': colors.yellow,
+    'tanh': colors.green,
+    'linear': colors.blue,
+    'relu': colors.red
+}
