@@ -57,6 +57,7 @@ def classifier_metrics(classifier_dirpath, keys=None, averaging='macro'):
             prediction_filenames(classifier_dirpath)):
         predictions = labels_single_file(
             os.path.join(classifier_dirpath, prediction_file))
+        print('DEBUG: classes used {}'.format(predictions['True'].unique()))
         accuracy = metrics.accuracy_score(
             predictions['True'], predictions.Predicted)
         precision, recall, f1, _ = metrics.precision_recall_fscore_support(
@@ -137,13 +138,13 @@ def print_confusion_matrix(confusion_matrix, class_names, figsize=(10,7),
     return fig
 
 
-def plot_confusion_matrix(classifier_dirpath, partition=0):
+def plot_confusion_matrix(classifier_dirpath, partition=None):
     prediction_files = prediction_filenames(classifier_dirpath)
     prediction_file = None
-    for possible_prediction_file in prediction_files:
-        if ('partition' + str(partition) in possible_prediction_file
-                and 'dev' in possible_prediction_file):
-            prediction_file = possible_prediction_file
+    for possible_pred_file in prediction_files:
+        if ((partition == None or ('partition' + str(partition) in possible_pred_file))
+                and 'dev' in possible_pred_file):
+            prediction_file = possible_pred_file
             break
     if prediction_file is None:
         raise ValueError('No prediction for partition {}'.format(partition))

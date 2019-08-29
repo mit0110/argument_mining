@@ -58,7 +58,7 @@ def classifier_learning(classifier_dirpath, keys=None):
     return pandas.concat(result)
 
 
-def architecture_learning(experiment_dirs, keys):
+def architecture_learning(experiment_dirs, keys=None):
     """Reads learning metrics for all classifiers
 
     Args:                                                                        
