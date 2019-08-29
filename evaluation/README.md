@@ -82,7 +82,7 @@ reasons: they allow visualizations on remote servers, and
 So far, we have the following steps of evaluation:
 
 1. Calculating individual metrics over classifiers. For this, we use individual
-notebooks like `Classification results - UKPLab models - Nabu.ipynb`. Because
+notebooks like `metrics_echr_claim_detection`. Because
 each server and task has different paths to results, each must have
 different notebooks.
   a. ACTION ITEM: Remove common code into script [Done]
@@ -103,7 +103,3 @@ visualizations:
   the distribution of F1 scores obtained when varying the particular
   hyperparameter. This is only for exploration, only the best visualizations
   will be included in publications.
-
-The best
-
-##
