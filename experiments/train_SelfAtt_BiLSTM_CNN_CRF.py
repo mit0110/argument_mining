@@ -98,8 +98,7 @@ def main():
         'dropout': args.dropout, 'charEmbeddingsSize': args.char_embedding_size,
         'charEmbeddings': args.char_embedding, 'miniBatchSize': args.batch_size,
         'earlyStopping': args.patience,
-        'n_heads': 4, # args.n_heads,
-        'attention_size': 256 # args.attention_size
+        'n_heads':  args.n_heads,  'attention_size': args.attention_size
     }
     print(classifier_params)
 
