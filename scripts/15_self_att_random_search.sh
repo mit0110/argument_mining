@@ -1,5 +1,7 @@
 HEADS=$1
 
+echo "Attention heads " $HEADS
+
 for i in 1 2 3 4 5; do
     echo "******************* EXPLORING SETTING $i ***************************"
     CHAR_EMB=(lstm None cnn)
@@ -26,7 +28,7 @@ for i in 1 2 3 4 5; do
     rand_batch_size=${BATCH_SIZE[$[$RANDOM % ${#BATCH_SIZE[@]}]]}
     echo "Batch size" $rand_batch_size
 
-    ATTENTION_SIZE=(32 64 128 256)
+    ATTENTION_SIZE=(32 64 128)
     rand_attention_size=${ATTENTION_SIZE[$[$RANDOM % ${#ATTENTION_SIZE[@]}]]}
     echo "Attention size" $rand_attention_size
 
