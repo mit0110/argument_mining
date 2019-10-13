@@ -65,7 +65,7 @@ def architecture_learning(experiment_dirs, keys=None):
          classifier_dirpath: [str] the full path to the directory with prediction 
          files.                                                                   
          keys: [dict] map from column name to a function that receives            
-         the prediction filename and returns the key value. This is use in case   
+         the prediction filename and returns the key value. This is used when   
          there are multiple partitions of the same datasets on the directory.
 
     Returns:
