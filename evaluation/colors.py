@@ -5,3 +5,5 @@ yellow = '#FFB400'
 blue = '#00A6ED'
 green = '#7FB800'
 dark_blue = '#0D2C54'
+gray = '#8B8B8B'
+

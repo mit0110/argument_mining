@@ -17,5 +17,6 @@ activation_palette = {
     'sigmoid': colors.yellow,
     'tanh': colors.green,
     'linear': colors.blue,
-    'relu': colors.red
+    'relu': colors.red,
+    'na': colors.gray
 }
