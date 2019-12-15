@@ -8,7 +8,7 @@ word_number \t word \t _ \t _ \t label
 Different instances are separated by blank lines. Word number is global in
 document.
 
-The expected output is a csv file with columns named text, tag and sentence.
+The expected output is a tsv file with columns named text, tag and sentence.
 The column sentence is expected to have the number of instance.
 """
 
@@ -35,7 +35,7 @@ def main():
 
     with open(args.input_filepath, 'r') as input_file, \
             open(args.output_filepath, 'w') as output_file:
-        output_file.write("text,tag,sentence\n")
+        output_file.write("text\ttag\tsentence\n")
         for line_number, line in enumerate(input_file):
             if line.strip() == '':
                 instance_number += 1
@@ -46,7 +46,7 @@ def main():
                 continue
             word = elements[1]
             tag = elements[4]
-            output_file.write(','.join([word, tag, str(instance_number)]) + '\n')
+            output_file.write('\t'.join([word, tag, str(instance_number)]) + '\n')
 
 
 if __name__ == '__main__':

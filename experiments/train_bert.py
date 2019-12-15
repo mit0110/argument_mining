@@ -271,7 +271,7 @@ def evaluate(model, test_dataloader):
 
 
 def train(train_dataset, model, tokenizer, labels, pad_token_label_id,
-          dev_dataloader):
+          dev_dataloader, epochs):
     """ Train the model """
 
     train_batch_size = 4
@@ -279,10 +279,10 @@ def train(train_dataset, model, tokenizer, labels, pad_token_label_id,
     train_dataloader = DataLoader(train_dataset, sampler=train_sampler,
                                   batch_size=train_batch_size)
 
-    num_train_epochs = 40.0
+    num_train_epochs = epochs
     t_total = len(train_dataloader) // num_train_epochs
 
-    # Prepare optimizer and schedule (linear warmup and decay)
+    # Prepare optimizer and shedule (linear warmup and decay)
     no_decay = ["bias", "LayerNorm.weight"]
     optimizer_grouped_parameters = [
         {"params": [p for n, p in model.named_parameters()
@@ -338,6 +338,7 @@ def train(train_dataset, model, tokenizer, labels, pad_token_label_id,
 
 
 def main():
+    device = "cuda"
     args = read_args()
     # This expects a csv with columns text tag and sentence
     data = pd.read_csv(os.path.join(args.dataset_dirpath, "train.csv"),
@@ -353,7 +354,7 @@ def main():
     examples = [InputExample(guid, words, labels)
                 for guid, (words, labels) in enumerate(zip(sentences, labels))]
 
-    possible_labels = data.tag.unique().values
+    possible_labels = data.tag.unique()
     with torch.cuda.device(n_gpu):
         features = convert_examples_to_features(
             examples, possible_labels, 50, tokenizer,
@@ -443,7 +444,7 @@ def main():
     with torch.cuda.device(n_gpu):
         global_step, train_loss_timeline, dev_loss_timeline = train(
             train_dataset, model, tokenizer, labels,
-            pad_token_label_id, dev_dataloader)
+            pad_token_label_id, dev_dataloader, args.epochs)
 
     fig, ax = plt.subplots()
     ax.plot(np.arange(len(train_loss_timeline)), train_loss_timeline, label="train")
