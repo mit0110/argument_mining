@@ -8,7 +8,7 @@ import os
 import sys
 import torch
 
-from sklearn.metrics import precision_score, recall_score, f1_score
+from sklearn import metrics
 from tensorboardX import SummaryWriter
 from torch.nn import CrossEntropyLoss
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler, TensorDataset
@@ -25,6 +25,10 @@ from io import open
 MODEL_CLASSES = {
     "bert": (BertConfig, BertForTokenClassification, BertTokenizer),
 }
+
+MAX_SEQUENCE_LENGTH = 50
+DEVICE = 'cuda'
+NGPU = 1
 
 
 def read_args():
@@ -94,11 +98,6 @@ def set_seed(seed):
     np.random.seed(seed)
     torch.manual_seed(seed)
 
-
-
-device = "cuda"
-n_gpu = 1
-
 # Set seed
 set_seed(42)
 
@@ -116,7 +115,7 @@ with torch.cuda.device(n_gpu):
                                                 do_lower_case=True)
     model = model_class.from_pretrained(bert_type, from_tf=False,
                                         config=config)
-    model.to(device)
+    model.to(DEVICE)
 
     'done'
 
@@ -240,10 +239,9 @@ def evaluate(model, test_dataloader):
     preds = None
     out_label_ids = None
     model.eval()
-    device = "cuda"
     with torch.cuda.device(1):
         for batch in test_dataloader:
-            batch = tuple(t.to(device) for t in batch)
+            batch = tuple(t.to(DEVICE) for t in batch)
             with torch.no_grad():
                 inputs = {"input_ids": batch[0],
                           "attention_mask": batch[1],
@@ -252,8 +250,6 @@ def evaluate(model, test_dataloader):
                           "labels": batch[3]}
                 outputs = model(**inputs)
                 tmp_eval_loss, logits = outputs[:2]
-
-
                 eval_loss += tmp_eval_loss.item()
             nb_eval_steps += 1
             if preds is None:
@@ -268,6 +264,14 @@ def evaluate(model, test_dataloader):
         preds = np.argmax(preds, axis=2)
 
         return eval_loss, preds, out_label_ids
+
+
+def predict(model, test_dataloader):
+    eval_loss, preds, out_label_ids = evaluate(model, test_dataloader)
+    no_padding_positions = np.where(out_label_ids >= 0)
+    no_padding_predictions = preds[no_padding_positions]
+    no_padding_labels = out_label_ids[no_padding_positions]
+    return no_padding_predictions, no_padding_labels
 
 
 def train(train_dataset, model, tokenizer, labels, pad_token_label_id,
@@ -308,7 +312,7 @@ def train(train_dataset, model, tokenizer, labels, pad_token_label_id,
         epoch_iterator = tqdm(train_dataloader, desc="Iteration", disable=False)
         for step, batch in enumerate(epoch_iterator):
             model.train()
-            batch = tuple(t.to(device) for t in batch)
+            batch = tuple(t.to(DEVICE) for t in batch)
             inputs = {"input_ids": batch[0],
                         "attention_mask": batch[1],
                         "token_type_ids": batch[2],
@@ -338,7 +342,6 @@ def train(train_dataset, model, tokenizer, labels, pad_token_label_id,
 
 
 def main():
-    device = "cuda"
     args = read_args()
     # This expects a csv with columns text tag and sentence
     data = pd.read_csv(os.path.join(args.dataset_dirpath, "train.csv"),
@@ -357,7 +360,7 @@ def main():
     possible_labels = data.tag.unique()
     with torch.cuda.device(n_gpu):
         features = convert_examples_to_features(
-            examples, possible_labels, 50, tokenizer,
+            examples, possible_labels, MAX_SEQUENCE_LENGTH, tokenizer,
             cls_token_at_end=False,
             # xlnet has a cls token at the end
             cls_token=tokenizer.cls_token,
@@ -381,10 +384,10 @@ def main():
         all_label_ids = torch.tensor([f.label_ids
                                       for f in features], dtype=torch.long)
 
-        all_input_ids.to(device)
-        all_input_mask.to(device)
-        all_segment_ids.to(device)
-        all_label_ids.to(device)
+        all_input_ids.to(DEVICE)
+        all_input_mask.to(DEVICE)
+        all_segment_ids.to(DEVICE)
+        all_label_ids.to(DEVICE)
 
         train_dataset = TensorDataset(all_input_ids, all_input_mask,
                                       all_segment_ids, all_label_ids)
@@ -404,9 +407,8 @@ def main():
         for guid, (words, labels) in enumerate(zip(sentences_dev, labels_dev))]
 
     with torch.cuda.device(n_gpu):
-        device = "cuda"
         features_dev = convert_examples_to_features(
-            examples_dev, possible_labels, 50, tokenizer,
+            examples_dev, possible_labels, MAX_SEQUENCE_LENGTH, tokenizer,
             cls_token_at_end=False,
             # xlnet has a cls token at the end
             cls_token=tokenizer.cls_token,
@@ -430,10 +432,10 @@ def main():
         all_label_ids = torch.tensor([f.label_ids
                                       for f in features_dev], dtype=torch.long)
 
-        all_input_ids.to(device)
-        all_input_mask.to(device)
-        all_segment_ids.to(device)
-        all_label_ids.to(device)
+        all_input_ids.to(DEVICE)
+        all_input_mask.to(DEVICE)
+        all_segment_ids.to(DEVICE)
+        all_label_ids.to(DEVICE)
 
         dev_dataset = TensorDataset(all_input_ids, all_input_mask,
                                     all_segment_ids, all_label_ids)
@@ -445,6 +447,20 @@ def main():
         global_step, train_loss_timeline, dev_loss_timeline = train(
             train_dataset, model, tokenizer, labels,
             pad_token_label_id, dev_dataloader, args.epochs)
+
+
+    loss_history = pd.DataFrame(zip(range(len(train_loss_timeline)),
+                                    train_loss_timeline, dev_loss_timeline),
+                                columns=['Epoch', 'Train loss', 'Dev loss'])
+    loss_history.to_csv(os.path.join(args.output_dirpath, 'loss_history.tsv'),
+                        sep='\t')
+
+    predicted, true_labels = predict(model, dev_dataloader)
+    print(metrics.classification_report(true_labels, predicted))
+    predictions_df = pd.DataFrame(zip(predicted, true_labels),
+                               columns=['Predicted', 'True'])
+    predictions_df.to_csv(os.path.join(args.output_dirpath, 'dev_predictions.tsv'),
+                          sep='\t')
 
     fig, ax = plt.subplots()
     ax.plot(np.arange(len(train_loss_timeline)), train_loss_timeline, label="train")
